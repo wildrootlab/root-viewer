@@ -1,2 +1,3 @@
 2p-analysis-venv/
 src/tmp/
+src/__pycache__/
