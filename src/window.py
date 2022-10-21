@@ -48,7 +48,10 @@ class ImageWindow(tk.Frame):
     def initialize_user_interface(self):
         self.topFrame = Frame(self.parent, width= self.img.width(), height= 300)
         self.topFrame.grid(row=0, column=0, sticky="")
-        self.topFrameTitle = Label(self.topFrame, text = f"Select ROI with mouse and press enter to save",font=("Arial", 18))
+        self.topFrameTitle = Label(
+            self.topFrame, 
+            text = f"Select ROI with mouse and press enter to save", 
+            font=("Arial", 18))
         self.topFrameTitle.grid(row=0, column=0,pady=5,padx=2)
 
         # Bottom Frames
@@ -70,7 +73,8 @@ class ImageWindow(tk.Frame):
         self.buttonNext2.grid(row=0, column=4)
         self.buttonBack2.grid(row=0, column=0)
 
-        self.ImageText = Label(self.imagePaginateBtns, text = f"Image {self.imageNum} out of {self.numberOfImages}")
+        self.ImageText = Label(self.imagePaginateBtns, text = f"Image {self.imageNum} \
+            out of {self.numberOfImages}")
         self.ImageText.grid(row=0, column=2)
         
         self.buttonReset = tk.Button(self.imagePaginateBtns,text="Submit", command=self.clickSubmitBtn)
