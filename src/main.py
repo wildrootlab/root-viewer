@@ -6,8 +6,8 @@ import mask
 import visualizations
 from PIL import Image
 ext = "tif"
-tmpImages = f"{os.getcwd()}/tmp/images/"
-tmpROIs = f"{os.getcwd()}/tmp/rois/"
+tmpImages = f"{os.getcwd()}/src/tmp/images/"
+tmpROIs = f"{os.getcwd()}/src/tmp/rois/"
 DEBUG = False # set to True to enable Debugging
 
 def debuging(DEBUG):
@@ -22,7 +22,7 @@ def debuging(DEBUG):
     return DEBUG
 
 def createTmp():
-    if os.path.exists(f"{os.getcwd()}/tmp") == False:
+    if os.path.exists(f"{os.getcwd()}/src/tmp") == False:
         os.makedirs(tmpImages)
         os.makedirs(tmpROIs)
         if DEBUG == True:
@@ -56,7 +56,7 @@ def clearTmp():
 
 def delTmp():
     try:
-        shutil.rmtree(f"{os.getcwd()}/tmp")
+        shutil.rmtree(f"{os.getcwd()}/src/tmp")
     
     except Exception as e:
         print(f"Failed to delete {os.getcwd()}/tmp. Reason: {e}")

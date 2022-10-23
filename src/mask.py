@@ -16,8 +16,8 @@ def imageSizeCheck():
         heightl = []
         widthl = []
         
-        for image in os.listdir(f"{os.getcwd()}/tmp/images/"):
-            im = Image.open(f"{os.getcwd()}/tmp/images/{image}")
+        for image in os.listdir(f"{os.getcwd()}/src/tmp/images/"):
+            im = Image.open(f"{os.getcwd()}/src/tmp/images/{image}")
             imW, imH = im.size
             widthl.append(imW)
             heightl.append(imH)
@@ -33,7 +33,7 @@ def imageSizeCheck():
             raise Exception(f"Images are not square.\nWidth = {widthl[0]}\nHeight = {heightl[0]}")
         
         elif w == True and h == True and total == True:
-            im = Image.open(f"{os.getcwd()}/tmp/images/1.tif")
+            im = Image.open(f"{os.getcwd()}/src/tmp/images/1.tif")
             width, height = im.size
             return True, width, height
 
@@ -48,7 +48,7 @@ def selectROI(width, height):
     """)
 
     image = 1
-    numberOfImages = len(fnmatch.filter(os.listdir(f"{os.getcwd()}/tmp/images"), '*.*'))
+    numberOfImages = len(fnmatch.filter(os.listdir(f"{os.getcwd()}/src/tmp/images"), '*.*'))
 
     cwd = os.getcwd()
     fig, ax = plt.subplots()
@@ -74,7 +74,7 @@ class LassoManager(object):
         self.ax1.set_ylim([0, height])
         self.ax1.set_aspect('equal')
 
-        self.im = self.ax1.imshow(mpimg.imread(f"{cwd}/tmp/images/{image}.tif"), extent=[0, width, 0, height])
+        self.im = self.ax1.imshow(mpimg.imread(f"{cwd}/src/tmp/images/{image}.tif"), extent=[0, width, 0, height])
         self.msk = self.ax1.imshow(self.array, origin='lower',vmax=1, interpolation='nearest', alpha=0.3)
         
         self.pix = np.arange(width)
@@ -129,7 +129,7 @@ class LassoManager(object):
                 print("ROI Selected")
                 self.ax1.set_title("ROI Selected\nyou may exit the window to continue")
                 print(self.ROI)
-                np.savetxt(f"{os.getcwd()}/tmp/rois/roi.csv", self.ROI, delimiter=",")      
+                np.savetxt(f"{os.getcwd()}/src/tmp/rois/roi.csv", self.ROI, delimiter=",")      
         except Exception as e:
             print(e)
         self.lasso = Lasso(event.inaxes,
@@ -141,7 +141,7 @@ class LassoManager(object):
     
     def update(self):
 
-        self.im = self.ax1.imshow(mpimg.imread(f"{self.cwd}/tmp/images/{self.image}.tif"))
+        self.im = self.ax1.imshow(mpimg.imread(f"{self.cwd}/src/tmp/images/{self.image}.tif"))
         self.msk = self.ax1.imshow(self.array, origin='lower',vmax=1, interpolation='nearest', alpha=0.3)
         self.ax1.set_xlabel(f"Image {self.image} out of {self.numberOfImages}")
         self.canvas.draw_idle()

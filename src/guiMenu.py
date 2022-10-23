@@ -5,6 +5,7 @@ class Menu:
     def __init__(self, master, config, shortcuts, functions):
         """ Initialize the Menu """
         self.__config = config  # obtain link on config file
+        self.master = master
         self.__shortcuts = shortcuts  # obtain link on keyboard shortcuts
         self.__functs = functions  # obtain link on dictionary of functions
         self.menubar = tk.Menu(master)  # create main menu bar, public for the main GUI
@@ -14,6 +15,7 @@ class Menu:
         self.__label_close = 'Close image'
         self.__label_tools = 'Tools'
         self.__label_rect = 'Get Rectangles'
+        self.__label_toolbar = 'Open Tool Bar'
         self.__label_open = 'Open ROI'
         self.__label_save = 'Save ROI'
         # Create menu for the image
@@ -41,6 +43,9 @@ class Menu:
                                  command=self.__shortcuts[3][2],
                                  accelerator=self.__shortcuts[3][0],
                                  state='disabled')
+        self.__tools.add_command(label=self.__label_toolbar,
+                                 command=self.__shortcuts[6][2],
+                                 accelerator=self.__shortcuts[6][0])
         self.__tools.add_separator()
         self.__tools.add_command(label=self.__label_open,
                                  command=self.__shortcuts[4][2],
@@ -58,6 +63,8 @@ class Menu:
                                 command=self.__functs["default_geometry"],
                                 accelerator='F5')
         self.menubar.add_cascade(label='View', menu=self.__view)
+
+
 
     def __list_recent(self):
         """ List of the recent images """

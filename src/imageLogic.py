@@ -1,5 +1,6 @@
 import os
 import math
+import shutil
 import hashlib
 import warnings
 import tkinter as tk
@@ -45,7 +46,7 @@ class CanvasImage:
         # when too many key stroke events in the same time
         self.canvas.bind('<Key>', lambda event: self.canvas.after_idle(self.__keystroke, event))
         logging.info('Open image: {}'.format(self.path))
-
+        
         # Decide if this image huge or not
         self.__huge = False  # huge or not
         self.__huge_size = 14000  # define size of the huge image
@@ -135,6 +136,52 @@ class CanvasImage:
         except:
             return False  # not image
         return True  # image
+    @staticmethod
+    def check_folder(path):
+        """ Check if folder contains any supported images """
+        supported_image_formats = [".bmp", ".dds", ".gif", ".jpg", ".jpeg", ".png", ".tif", ".tiff"]
+        if not any(fname.endswith(tuple(supported_image_formats)) for fname in os.listdir(path)):
+            # for file in folder check if file of support image format, if none return false 
+            return False
+        else: return True
+    @staticmethod  
+    def img_to_temp(self, path):
+        """ Copy desiered files with proper extension into tmp folder """
+        count = 1
+        supported_image_formats = [".bmp", ".dds", ".gif", ".jpg", ".jpeg", ".png", ".tif", ".tiff"]
+
+        try:
+            if os.listdir(self.tmp_images_dir) == []: # check if tmep images is clear
+                for file in os.listdir(path): # for file in dest folder copy to temp images
+                    if file.endswith(tuple(supported_image_formats)):
+                        src = os.path.join(path, file)
+                        dest = os.path.join(self.tmp_images_dir,str(count)+".tif")
+                        shutil.copy(str(src), str(dest))
+                        count += 1
+                return True
+        except Exception as e:
+            print('Failed to delete %s. Reason: %s' % (os.path.basename, e))
+                
+
+    def set_dir_image(self, path):
+        """ Set image from directory """
+        self.newPath = rf"C:\dev\projects\2P-Analysis\tmp\images\{self.imageNum}.tif"
+        self.imageUpdate()
+        self.showMask()
+        self.img2 = ImageTk.PhotoImage(self.Image) #.resize((self.canvas_width, self.canvas_height)))
+
+        
+        self.canvas.delete(self.canvasImg)
+        self.canvasImg = self.canvas.create_image(0, 0, image=self.img2, anchor=NW)
+        self.canvas.tag_lower(self.canvasImg)
+
+        self.ImageText2 = f"Image {self.imageNum} out of {self.numberOfImages}"
+        self.ImageText.configure(text=self.ImageText2)
+        self.ImageText.text = self.ImageText2
+        
+        self.__imframe = Rectangles(placeholder=self.__placeholder_image, path=path,
+                                    rect_size=self.__config.get_rect_size())
+        self.__imframe.grid()  # show it
 
     def redraw_figures(self):
         """ Dummy function to redraw figures in the children classes """

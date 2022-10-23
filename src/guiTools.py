@@ -6,6 +6,7 @@ import configparser
 from datetime import datetime
 from .logger import logging
 
+
 str_image = 'Image'
 str_name = 'Name'
 str_md5 = 'MD5'
