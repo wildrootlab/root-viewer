@@ -1,6 +1,5 @@
 2p-analysis-venv/
 src/tmp/
 src/__pycache__/
-test/
 temp/
 main.ipynb

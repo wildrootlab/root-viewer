@@ -19,15 +19,17 @@ class MainGUI(ttk.Frame):
         ttk.Frame.__init__(self, master=mainframe)
         self.mainframe = mainframe
         self.tmp_images_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'temp','images')
+        self.imageNum = 1
         self.numberOfImages = None
+        self.new__imframe = None
         self.__create_instances()
         self.__create_main_window()
         self.__create_widgets()
-        self.__update_image = self.Update_image(mainframe, self.tmp_images_dir)
     def __create_instances(self):
         """ Instances for GUI are created here """
         self.__config = Config()  # open config file of the main window
         self.__imframe = None  # empty instance of image frame (canvas)
+        self.new__imframe = None
 
     def __create_main_window(self):
         """ Create main window GUI"""
@@ -69,8 +71,7 @@ class MainGUI(ttk.Frame):
                             ['Ctrl+R', self.keycode['r'], self.__get_images],    # 3 get set of images
                             ['Ctrl+H', self.keycode['h'], self.__open_figures],  # 4 open figures for the image
                             ['Ctrl+S', self.keycode['s'], self.__save_figures],  # 5 save figures of the image
-                            ['Ctrl+T', self.keycode['t'], self.open_tools] # 6 Open menu bar
-                            ]
+                            ['Ctrl+T', self.keycode['t'], self.open_tools]]      # 6 Open menu bar
         # Bind events to the main window
         self.master.bind('<Motion>', lambda event: self.__motion())  # track and handle mouse pointer position
         self.master.bind('<F11>', lambda event: self.__toggle_fullscreen())  # toggle fullscreen mode on
@@ -163,13 +164,13 @@ class MainGUI(ttk.Frame):
         # BUG! Add menu bar to the main window BEFORE iconbitmap command. Otherwise it will
         # shrink in height by 20 pixels after each open-close of the main window.
         #----------------------------------favicon-------------------------------------------------
-        # this_dir = os.path.dirname(os.path.realpath(__file__))  # directory of this file
-        # if os.name == 'nt':  # Windows OS
-        #     self.master.iconbitmap(os.path.join(this_dir, 'logo.ico'))  # type: ignore # set logo icon
-        # else:  # Linux OS
-        #     # ICO format does not work for Linux. Use GIF or black and white XBM format instead.
-        #     img = tk.PhotoImage(file=os.path.join(this_dir, 'logo.gif'))
-        #     self.master.tk.call('wm', 'iconphoto', self.master._w, img)  # set logo icon
+        this_dir = os.path.dirname(os.path.realpath(__file__))  # directory of this file
+        if os.name == 'nt':  # Windows OS
+            self.master.iconbitmap(os.path.join(this_dir, 'logo.ico'))  # type: ignore # set logo icon
+        else:  # Linux OS
+            # ICO format does not work for Linux. Use GIF or black and white XBM format instead.
+            img = tk.PhotoImage(file=os.path.join(this_dir, 'logo.gif'))
+            self.master.tk.call('wm', 'iconphoto', self.master._w, img)  # set logo icon
         #--------------------------------------------------------------------------------------------
         # Create placeholder frame for the image
         self.master
@@ -187,7 +188,7 @@ class MainGUI(ttk.Frame):
     def open_tools(self):
         tool_window = tk.Toplevel(self.mainframe)
         tool_window.overrideredirect(True)
-        tool_window.geometry("+1000+200")
+        tool_window.geometry("+10+10")
         # title bar
         title_bar = tk.Frame(tool_window, bg="#D9F1FE", relief="raised")
         title_bar.pack(expand=1, fill="x",side ="top")
@@ -195,24 +196,35 @@ class MainGUI(ttk.Frame):
         title_label.pack(side="left")
         close_button = tk.Button(title_bar, text='x', command=tool_window.destroy, bg="#B8CDD9", relief="flat")
         close_button.pack(side="right")
+        def get_pos(event):
+            global xwin
+            global ywin
+            xwin = event.x
+            ywin = event.y
+
+        title_bar.bind("<Button-1>", get_pos)
+        title_label.bind("<Button-1>", get_pos)
         def move_settings(e):
-            tool_window.geometry(f"+{e.x_root}+{e.y_root}")
+            tool_window.geometry(f"+{e.x_root-xwin}+{e.y_root-ywin}")
         title_label.bind("<B1-Motion>", move_settings)
         title_bar.bind("<B1-Motion>", move_settings)
-        
+
         # title bar functions
-        moveImageFrame = tk.Frame(tool_window)
-        moveImageFrame.pack(side="top")
-        bckbtn2 = tk.Button(moveImageFrame, text ="<<", command = self.__update_image.backBtn2)
+        self.moveImageFrame = tk.Frame(tool_window)
+        self.moveImageFrame.pack(side="top")
+        bckbtn2 = tk.Button(self.moveImageFrame, text ="<<", command = self.backBtn2)
         bckbtn2.pack(side="left")
-        bckbtn = tk.Button(moveImageFrame, text ="<", command = self.__update_image.backBtn)
+        bckbtn = tk.Button(self.moveImageFrame, text ="<", command = self.backBtn)
         bckbtn.pack(side="left")
-        ImageNum = tk.Label(moveImageFrame, text = f"Image {self.__update_image.imageNum} out of {self.numberOfImages}")
-        ImageNum.pack(side="left")
-        fwdbtn = tk.Button(moveImageFrame, text =">", command = self.__update_image.forwardBtn)
+        # tools
+        self.ImageNum = tk.Label(self.moveImageFrame, text = f"Image {self.imageNum} out of {self.numberOfImages}")
+        self.ImageNum.pack(side="left")
+        fwdbtn = tk.Button(self.moveImageFrame, text =">", command = self.forwardBtn)
         fwdbtn.pack(side="left")
-        fwdbtn2 = tk.Button(moveImageFrame, text =">>", command = self.__update_image.forwardBtn2)
+        fwdbtn2 = tk.Button(self.moveImageFrame, text =">>", command = self.forwardBtn2)
         fwdbtn2.pack(side="left")
+        #self.rectSizeSlider = tk.Scale(self.moveImageFrame, from_=0, to=100, length=100,tickinterval=20, orient="horizontal", command=Config.set_rect_size)
+        #self.rectSizeSlider.pack()
 
     def __set_image_single(self, path):
         """ Close previous image and set a new one """
@@ -244,7 +256,7 @@ class MainGUI(ttk.Frame):
             
             # Enable menus
             self.__menu.set_state(state='normal')
-            self.open_tools
+            self.open_tools()
 
     @handle_exception(0)
     def __open_image(self):
@@ -286,6 +298,11 @@ class MainGUI(ttk.Frame):
             self.__imframe = None
             self.master.title(self.__default_title)  # set default window title
             self.__menu.set_state(state='disabled')  # disable some menus
+    
+    def __close_image_folder(self):
+        """ Close image in folder sequence """
+        self.__imframe.destroy()
+        self.master.title(self.__default_title)  # set default window title
 
     def __check_roi(self):
         """ Check if there are ROI on the image """
@@ -337,60 +354,50 @@ class MainGUI(ttk.Frame):
         self.del_tmpImage()
         self.quit()
 
-
-    class Update_image():
-        def __init__(self, window, tmp_images_dir):
-            self.tmp_images_dir = tmp_images_dir
-            self.parent = window
+    def forwardBtn(self):
+        self.numberOfImages = len(os.listdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'temp','images')))
+        if self.imageNum < self.numberOfImages - 1:
+            self.imageNum += 1
+            self.new_img()
+        if self.imageNum >= self.numberOfImages - 1:
+            self.imageNum = self.numberOfImages
+            self.new_img()
+    def backBtn(self):
+        self.numberOfImages = len(os.listdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'temp','images')))
+        if self.imageNum > 1:
+            self.imageNum -= 1
+            self.new_img()
+        if self.imageNum <= 1:
             self.imageNum = 1
-            
-        def forwardBtn(self):
-            self.numberOfImages = len(os.listdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'temp','images')))
-            if self.imageNum < self.numberOfImages - 1:
-                self.imageNum += 1
-                self.new_img()
-            if self.imageNum >= self.numberOfImages - 1:
-                self.imageNum = self.numberOfImages
-                self.new_img()
+            self.new_img()
+    def forwardBtn2(self):
+        self.numberOfImages = len(os.listdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'temp','images')))
+        if self.imageNum < self.numberOfImages - 5:
+            self.imageNum += 5
+            self.new_img()
+        if self.imageNum >= self.numberOfImages - 5:
+            self.imageNum = self.numberOfImages
+            self.new_img()
+    def backBtn2(self):
+        self.numberOfImages = len(os.listdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'temp','images')))
+        if self.imageNum > 5:
+            self.imageNum -= 5
+            self.new_img()
+        if self.imageNum <= 5:
+            self.imageNum = 1
+            self.new_img()
 
-        def backBtn(self):
-            self.numberOfImages = len(os.listdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'temp','images')))
-            if self.imageNum > 1:
-                self.imageNum -= 1
-                self.new_img()
-            if self.imageNum <= 1:
-                self.imageNum = 1
-                self.new_img()
+    def new_img(self):
+        """ Close previous image and set a new one """
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'temp','images')
+        newImg = f"{path}/{self.imageNum}.tif"
+        self.__close_image_folder() # close previous image
+        self.new__imframe = Rectangles(placeholder=self.__placeholder_image, path=newImg,
+                                    rect_size=self.__config.get_rect_size())  # create image frame
+        self.new__imframe.grid()  # show it 
 
-        def forwardBtn2(self):
-            self.numberOfImages = len(os.listdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'temp','images')))
-            if self.imageNum < self.numberOfImages - 5:
-                self.imageNum += 5
-                self.new_img()
-            if self.imageNum >= self.numberOfImages - 5:
-                self.imageNum = self.numberOfImages
-                self.new_img()
-
-        def backBtn2(self):
-            self.numberOfImages = len(os.listdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'temp','images')))
-            if self.imageNum > 5:
-                self.imageNum -= 5
-                self.new_img()
-            if self.imageNum <= 5:
-                self.imageNum = 1
-                self.new_img()
-
-        def new_img(self):
-            """ Close previous image and set a new one """
-            path = os.listdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'temp','images'))
-            new_Img = f"{path}/{self.imageNum}.tif"
-
-            self.__close_image()  # close previous image
-            self.__imframe = Rectangles(placeholder=self.__placeholder_image, path=new_Img,
-                                        rect_size=self.__config.get_rect_size())  # create image frame
-            self.__imframe.grid()  # show it
-            self.master.title(self.__default_title + ': {}'.format(new_Img))  # change window title
-            self.__config.set_recent_path(new_Img)  # save image path into config
-            # Enable some menus
-            self.__menu.set_state(state='normal')
-            print(self.imageNum)
+        self.__imframe = self.new__imframe # set new image to current                           
+        self.master.title(self.__default_title + ': {}'.format(newImg))  # change window title
+        # Enable some menus
+        self.__menu.set_state(state='normal')
+        self.ImageNum.config(text = f"Image {self.imageNum} out of {self.numberOfImages}")

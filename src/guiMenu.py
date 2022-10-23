@@ -64,8 +64,6 @@ class Menu:
                                 accelerator='F5')
         self.menubar.add_cascade(label='View', menu=self.__view)
 
-
-
     def __list_recent(self):
         """ List of the recent images """
         self.__recent_images.delete(0, 'end')  # empty previous list
