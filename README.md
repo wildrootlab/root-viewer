@@ -2,4 +2,4 @@
 
 [styleguide](https://google.github.io/styleguide/pyguide.html)
 ---
-TODO: Add roi rectange selection scaling and pointer roi selection lasso
+This branch will be merged into main. It is a redesign of the GUI using [DearPyGui](https://github.com/hoffstadt/DearPyGui), an Immediate-Mode Graphical User Interfaces.
