@@ -49,8 +49,6 @@ class Temp():
         """
         Copy desiered files with proper extension into tmp folder
         """
-        global Done
-        Done = False
         # set path for tmp images folder
         self.__config_path_tmp_images = os.path.join(self.__config_path_tmp, 'images')
         if not os.path.exists(self.__config_path_tmp_images):
@@ -76,8 +74,7 @@ class Temp():
                 num += 1
             else:
                 pass
-            Done = True
-        return Done
+
     
     def convert_files(self, sender, app_data):
         """INCOMPLETE"""
