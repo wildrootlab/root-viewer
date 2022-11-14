@@ -10,18 +10,17 @@ from PIL import Image
 dpg.create_context()
 
 def load_image(*args):
-    global image, image_path
+    """Load first image from directory"""
     num =  1
-    images = os.listdir(tmp_img_path)
-    image_path = os.path.join(tmp_img_path, images[num])
-
-    width, height, channels, data = dpg.load_image(image_path)
-    return width, height, channels, data
+    images = os.listdir(tmp_img_path) # get all images
+    image_path = os.path.join(tmp_img_path, images[num]) # get first image
+    width, height, channels, data = dpg.load_image(image_path) # load image
+    return width, height, channels, data 
 
 def add_image():
     width, height, channels, data = load_image()
     with dpg.texture_registry() as reg_id:
-        texture_id = dpg.add_static_texture(width, height, data, parent=reg_id)
+        texture_id = dpg.add_static_texture(width, height,  data, parent=reg_id)
     return texture_id
 
 def update_image(sender, app_data):
@@ -159,6 +158,7 @@ def images_to_tmp(sender, app_data):
     """
     Copy desiered files with proper extension into tmp folder
     """
+
     if os.name == 'nt':
         __config_path_tmp = os.path.join(os.getenv('APPDATA'), '2P-Analyser', 'tmp')
         if not os.path.exists(__config_path_tmp):
@@ -168,13 +168,23 @@ def images_to_tmp(sender, app_data):
         if not os.path.exists(__config_path_tmp):
             os.makedirs(__config_path_tmp)
     
+    for file in os.listdir(tmp_img_path):
+        os.remove(os.path.join(tmp_img_path, file))
+
     __extensions = ("jpg", "jpeg", "png", "bmp", "psd", "gif","hdr","pic","ppm","pgm")
     # set path for tmp images folder
     __config_path_tmp_images = os.path.join(__config_path_tmp, 'images')
+    # create tmp images folder if it doesn't exist
     if not os.path.exists(__config_path_tmp_images):
         os.makedirs(__config_path_tmp_images)
+    
     # get list of files from file dialog
     directory = os.path.normpath(app_data.get("current_path"))
+    
+    # clear tmp images folder
+    for file in os.listdir(__config_path_tmp_images):
+        os.remove(os.path.join(__config_path_tmp_images, file))
+    
     num = 1
     # copy files with proper extension into tmp folder
     for file in os.listdir(directory):
@@ -193,6 +203,7 @@ def images_to_tmp(sender, app_data):
             num += 1
         else:
             pass
+    # set image slider max value to files len in tmp folder
     dpg.configure_item("Image Slider", max_value=len(os.listdir(tmp_img_path)),show=True)
     image_window()
 
@@ -202,7 +213,9 @@ if __name__ == "__main__":
     view_port_width = 1200
     view_port_height = 1000
     rois = []
-    dpg.create_viewport(title="Hi", width=view_port_width, height=view_port_height)
+    dpg.create_viewport(title="2P-Analysis", width=view_port_width, height=view_port_height)
+
+
 
     dpg.add_file_dialog(width=800, height=400,
         directory_selector=True, show=False, callback=images_to_tmp, tag="open_folder_file_dialog_id")

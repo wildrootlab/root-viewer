@@ -74,7 +74,6 @@ class Temp():
                 num += 1
             else:
                 pass
-
     
     def convert_files(self, sender, app_data):
         """INCOMPLETE"""
@@ -90,9 +89,3 @@ class Temp():
                 image = Image.fromarray(im / np.amax(im) * 255).convert('L')
                 image.save(f"{os.path.join(self.__config_path_tmp_images, f'{num}.png')}")
                 num += 1
-    
-    def del_tmp_img_dir(self, sender, app_data):
-        """
-        Delete tmp folder
-        """
-        os.system(f"rmdir {self.self.__config_path_tmp_images}")
