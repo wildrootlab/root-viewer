@@ -1,8 +1,11 @@
 import sys
 import os
+import time
 import napari
-from PyQt5.QtWidgets import QMainWindow, QFileDialog, QAction, QVBoxLayout, QWidget, QApplication
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QPixmap
+
+from PyQt5.QtWidgets import QMainWindow, QFileDialog, QAction, QVBoxLayout, QWidget, QApplication, QSplashScreen, QProgressBar
+from PyQt5.QtCore import QSettings, QThread, pyqtSignal, QObject, pyqtSlot
 import qdarktheme
 from functools import wraps
 from magicgui import magicgui
@@ -25,6 +28,9 @@ class MainWindow(QMainWindow, TempFile):
     def __init__(self):
         super().__init__()
         self._main = QWidget()
+        self.show_splash()
+        self.settings = QSettings('2P-Analysis')
+        self.get_settings()
         self.setWindowTitle("Danny's very special 2P analysis")
         self.setWindowIcon(QIcon(os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons", "logo_light.png")))
         self.setCentralWidget(self._main)
@@ -35,7 +41,9 @@ class MainWindow(QMainWindow, TempFile):
         self._create_menue_bar()
         # add a napari viewer
         self.show_image_viewer()
-
+        # set progress bar
+        self.popup = PopUpProgressB()
+        self.popup.show
         # set temp dir
         self.tempconfig = TempFile()
         self.tmppath = self.tempconfig.get_tmp_path(self)
@@ -44,9 +52,30 @@ class MainWindow(QMainWindow, TempFile):
         quit.triggered.connect(self.closeEvent)
 
         self.ToolsMenu = {}
+    
+    def show_splash(self):
+        try:
+            self.splash = QSplashScreen(QPixmap(os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons", "logo_dark.png")))
+            self.splash.show()
+        except: 
+            pass
+    
+    def close_splash(self):
+        self.splash.close
 
-    def set_app_icon(self, icon_path):
-        self.setWindowIcon(QIcon(icon_path))
+
+    def set_settings(self):
+        self.settings.setValue("window_size", self.size())
+        self.settings.setValue("window_pos", self.pos())
+    
+    def get_settings(self):
+        """Load Settings"""
+        try:
+            self.resize(self.settings.value("window_size"))
+            self.move(self.settings.value("window_pos"))
+        except:
+            pass
+
 
     def show_image_viewer(self):
         self.viewer = napari.Viewer(show=False)
@@ -74,8 +103,11 @@ class MainWindow(QMainWindow, TempFile):
             print(e)
         
     def closeEvent(self, event):
-        self.tempconfig.del_tmp_images()
-        pass
+        try:
+            self.set_settings() # set the settings
+            self.tempconfig.del_tmp_images() # delete temp images
+        except: 
+            pass
 
     def _open_file(self):
         print(str(QFileDialog.getOpenFileName(self, "Select File")))
@@ -225,6 +257,8 @@ def make_gui(func, viewer, *args, **kwargs):
     @wraps(func)
     def worker_func(*iargs, **ikwargs):
         """Wrapper function to pass arguments to the function"""
+        print("woooooooooooooooooooooork")
+        app.popup.show
         data = func(*iargs, **ikwargs)
         if data is None:
             return None
@@ -282,6 +316,42 @@ def make_gui(func, viewer, *args, **kwargs):
     gui = magicgui(worker_func, *args, **kwargs)
     return gui
 
+class ProgressBarWorker(QObject):
+    finished = pyqtSignal()
+    intReady = pyqtSignal(int)
+
+    @pyqtSlot()
+    def proc_counter(self):  # A slot takes no params
+        for i in range(1, 100):
+            print(i)
+            time.sleep(1)
+            self.intReady.emit(i)
+
+        self.finished.emit()
+
+class PopUpProgressB(QWidget):
+
+    def __init__(self):
+        super().__init__()
+        self.pbar = QProgressBar(self)
+        self.pbar.setGeometry(30, 40, 500, 75)
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.pbar)
+        self.setLayout(self.layout)
+        self.setGeometry(300, 300, 550, 100)
+        self.setWindowTitle('Progress Bar')
+
+
+        self.obj = ProgressBarWorker()
+        self.thread = QThread()
+        self.obj.intReady.connect(self.on_count_changed)
+        self.obj.moveToThread(self.thread)
+        self.obj.finished.connect(self.thread.quit)
+        self.thread.started.connect(self.obj.proc_counter)
+        self.thread.start()
+
+    def on_count_changed(self, value):
+        self.pbar.setValue(value)
 
 
 if __name__ == "__main__":
