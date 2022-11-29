@@ -3,4 +3,4 @@ src/tmp/
 src/__pycache__/
 temp/
 main.ipynb
-dev/__pycache__
+dev/__pycache__/

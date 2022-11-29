@@ -14,6 +14,9 @@ class TempFile:
             os.makedirs(config_path_tmp)
     
     def __init__(self):
+        import aicsimageio
+        from napari.settings import get_settings
+        get_settings().plugins.extension2reader = {'*': 'napari-aicsimageio', **get_settings().plugins.extension2reader}
         self.__config_path_tmp = TempFile.config_path_tmp
         # set path for tmp images folder
         self.__config_path_tmp_images = os.path.join(self.__config_path_tmp, 'images')

@@ -1,17 +1,14 @@
 import sys
 import os
-import time
 import napari
-from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtGui import QIcon
 
-from PyQt5.QtWidgets import QMainWindow, QFileDialog, QAction, QVBoxLayout, QWidget, QApplication, QSplashScreen, QProgressBar
-from PyQt5.QtCore import QSettings, QThread, pyqtSignal, QObject, pyqtSlot
+from PyQt5.QtWidgets import QMainWindow, QAction, QVBoxLayout, QWidget, QApplication
+from PyQt5.QtCore import QSettings
 import qdarktheme
-from functools import wraps
 from magicgui import magicgui
 from enum import Enum
 
-import inspect
 from Config import TempFile
 from skimage.io import imread
 from enum import Enum
@@ -28,22 +25,18 @@ class MainWindow(QMainWindow, TempFile):
     def __init__(self):
         super().__init__()
         self._main = QWidget()
-        self.show_splash()
         self.settings = QSettings('2P-Analysis')
         self.get_settings()
-        self.setWindowTitle("Danny's very special 2P analysis")
+        self.setWindowTitle("2P analysis")
         self.setWindowIcon(QIcon(os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons", "logo_light.png")))
         self.setCentralWidget(self._main)
         # create a vertical box layout widget
         self.layout = QVBoxLayout(self._main)
         # add a menuBar
         self.menu = self.menuBar()
-        self._create_menue_bar()
         # add a napari viewer
         self.show_image_viewer()
-        # set progress bar
-        self.popup = PopUpProgressB()
-        self.popup.show
+        self.create_menue_bar()
         # set temp dir
         self.tempconfig = TempFile()
         self.tmppath = self.tempconfig.get_tmp_path(self)
@@ -52,17 +45,6 @@ class MainWindow(QMainWindow, TempFile):
         quit.triggered.connect(self.closeEvent)
 
         self.ToolsMenu = {}
-    
-    def show_splash(self):
-        try:
-            self.splash = QSplashScreen(QPixmap(os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons", "logo_dark.png")))
-            self.splash.show()
-        except: 
-            pass
-    
-    def close_splash(self):
-        self.splash.close
-
 
     def set_settings(self):
         self.settings.setValue("window_size", self.size())
@@ -76,31 +58,38 @@ class MainWindow(QMainWindow, TempFile):
         except:
             pass
 
-
     def show_image_viewer(self):
         self.viewer = napari.Viewer(show=False)
         #self.viewer.window.qt_viewer.dockLayerList.hide()
         #self.viewer.window.qt_viewer.dockConsole.hide()
         #self.viewer.window.qt_viewer.dockLayerControls.hide()
-        self.viewer.window.main_menu.clear()
+        self.viewer.window.main_menu.hide()
         self.viewer.window._status_bar.hide()
         self.viewer.window.add_dock_widget(self.segmenting_widget, area="right", name="Segmentation")
         qt_viewer = self.viewer.window._qt_window
         self.layout.addWidget(qt_viewer)
     
-    def _create_menue_bar(self):
-        file_menu = self.menu.addMenu("&File")
-        file_menu.addAction("Open File", self._open_file)
-        file_menu.addAction("Open Folder", self._open_dir)
+    def create_menue_bar(self):
+        for menu in self.viewer.window.main_menu.actions():
+            print(menu.menu())
+        for action in self.viewer.window.file_menu.actions():
+            data = action.data()
+            try:
+                name = data.get('text')
+                if name in ['Preferences', 'Save Screenshot...', 'Save Screenshot with Viewer...','Copy Screenshot to Clipboard','Copy Screenshot with Viewer to Clipboard', 'Close Window']:
+                    self.viewer.window.file_menu.removeAction(action)
+            except: pass
+        for action in self.viewer.window.view_menu.actions():
+            data = action.data()
+            try:
+                name = data.get('text')
+                if name in ['Toggle Full Screen', 'Toggle Menubar Visibility']:
+                    self.viewer.window.view_menu.removeAction(action)
+            except: pass
 
-    def _open_dir(self):
-        """Select a directory and copy files in directory to temp dir"""
-        try:
-            dir = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
-            self.tempconfig.dir_images_to_tmp(dir)
-            self._view_images(os.path.join(self.tmppath, "images", "*.tif"))
-        except Exception as e:
-            print(e)
+        file_menu = self.menu.addMenu(self.viewer.window.file_menu)
+        edit_menu = self.menu.addMenu(self.viewer.window.view_menu)
+        window_menu = self.menu.addMenu(self.viewer.window.window_menu) 
         
     def closeEvent(self, event):
         try:
@@ -108,14 +97,6 @@ class MainWindow(QMainWindow, TempFile):
             self.tempconfig.del_tmp_images() # delete temp images
         except: 
             pass
-
-    def _open_file(self):
-        print(str(QFileDialog.getOpenFileName(self, "Select File")))
-    
-    def _view_images(self, images):
-        self.img = imread(images, plugin="tifffile")
-        self.viewer.dims.ndisplay = 3
-        self.viewer.add_image(self.img, scale=[1, 1, 1])
 
     class Functions(Enum):
         """Enum for the different fuctions"""
@@ -214,7 +195,7 @@ class MainWindow(QMainWindow, TempFile):
 
 
 def make_sub_sub_menu(self, action, title, window, action_type_tuple):
-    from functools import wraps
+    import inspect
     def func(whatever=None):
         sub_sub_menu = action
         # ugh
@@ -257,8 +238,6 @@ def make_gui(func, viewer, *args, **kwargs):
     @wraps(func)
     def worker_func(*iargs, **ikwargs):
         """Wrapper function to pass arguments to the function"""
-        print("woooooooooooooooooooooork")
-        app.popup.show
         data = func(*iargs, **ikwargs)
         if data is None:
             return None
@@ -315,44 +294,6 @@ def make_gui(func, viewer, *args, **kwargs):
             return data
     gui = magicgui(worker_func, *args, **kwargs)
     return gui
-
-class ProgressBarWorker(QObject):
-    finished = pyqtSignal()
-    intReady = pyqtSignal(int)
-
-    @pyqtSlot()
-    def proc_counter(self):  # A slot takes no params
-        for i in range(1, 100):
-            print(i)
-            time.sleep(1)
-            self.intReady.emit(i)
-
-        self.finished.emit()
-
-class PopUpProgressB(QWidget):
-
-    def __init__(self):
-        super().__init__()
-        self.pbar = QProgressBar(self)
-        self.pbar.setGeometry(30, 40, 500, 75)
-        self.layout = QVBoxLayout()
-        self.layout.addWidget(self.pbar)
-        self.setLayout(self.layout)
-        self.setGeometry(300, 300, 550, 100)
-        self.setWindowTitle('Progress Bar')
-
-
-        self.obj = ProgressBarWorker()
-        self.thread = QThread()
-        self.obj.intReady.connect(self.on_count_changed)
-        self.obj.moveToThread(self.thread)
-        self.obj.finished.connect(self.thread.quit)
-        self.thread.started.connect(self.obj.proc_counter)
-        self.thread.start()
-
-    def on_count_changed(self, value):
-        self.pbar.setValue(value)
-
 
 if __name__ == "__main__":
     qapp = QApplication.instance()
