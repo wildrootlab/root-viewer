@@ -9,7 +9,7 @@ from skimage.morphology import binary_opening
 from skimage.measure import label
 from skimage.morphology import local_maxima, local_minima
 from skimage.restoration import rolling_ball
-from skimage.measure import regionprops
+from skimage.measure import regionprops, marching_cubes, mesh_surface_area
 from skimage.segmentation import relabel_sequential
 from skimage.segmentation import clear_border
 from skimage.segmentation import expand_labels as sk_expand_labels
@@ -493,6 +493,15 @@ def Manually_split_labels(labels_layer: "napari.layers.Labels", points_layer: "n
 
     labels_layer.data = labels
     points_layer.data = []
+
+def wireframe(labels_layer: "napari.layers.Labels", viewer: "napari.Viewer") -> "napari.types.SurfaceData":
+    labels = np.asarray(labels_layer.data)
+    verts, faces, _, values = marching_cubes(labels)
+    #surface_area_pixels = mesh_surface_area(verts, faces)
+    wireframe_layer = viewer.add_surface((verts, faces, np.linspace(0, 1, len(verts))))
+    wireframe_layer.normals.face.visible = False
+    wireframe_layer.normals.vertex.visible = False
+    wireframe_layer.wireframe.visible = True
 
 
 def butterworth(image: "napari.types.ImageData", cutoff_frequency_ratio: float = 0.005, high_pass: bool = False,
