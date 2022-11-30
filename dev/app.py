@@ -76,7 +76,7 @@ class MainWindow(QMainWindow, TempFile):
             data = action.data()
             try:
                 name = data.get('text')
-                if name in ['Preferences', 'Save Screenshot...', 'Save Screenshot with Viewer...','Copy Screenshot to Clipboard','Copy Screenshot with Viewer to Clipboard', 'Close Window']:
+                if name in ['Save Screenshot...', 'Save Screenshot with Viewer...','Copy Screenshot to Clipboard','Copy Screenshot with Viewer to Clipboard', 'Close Window']:
                     self.viewer.window.file_menu.removeAction(action)
             except: pass
         for action in self.viewer.window.view_menu.actions():
@@ -89,7 +89,8 @@ class MainWindow(QMainWindow, TempFile):
 
         file_menu = self.menu.addMenu(self.viewer.window.file_menu)
         edit_menu = self.menu.addMenu(self.viewer.window.view_menu)
-        window_menu = self.menu.addMenu(self.viewer.window.window_menu) 
+        window_menu = self.menu.addMenu(self.viewer.window.window_menu)
+        #plugin_menu = self.menu.addMenu(self.viewer.window.plugins_menu)
         
     def closeEvent(self, event):
         try:
@@ -131,18 +132,17 @@ class MainWindow(QMainWindow, TempFile):
         invert_image = "invert_image"
         skeletonize = "skeletonize"
         Manually_merge_labels = "Manually_merge_labels"
+        wireframe = "wireframe"
         Manually_split_labels = "Manually_split_labels"
         extract_slic = "extract_slic"
 
     def register_function(self, func: Callable, *args, **kwargs) -> Callable:
                 self.ToolsMenu[func.__code__] = [func, "function", args, kwargs]
-                print("Registered function: ", func.__name__)
                 return func
             
     def open_func_gui(self, func: Callable):
         self.register_function(func)
         action, type_, args, kwargs = self.ToolsMenu[func.__code__]
-        print("Opening function: ", func.__name__)
         self.viewer.window.add_dock_widget(make_gui(action, self.viewer, *args, **kwargs), area='right', name=func.__name__)
     
     @magicgui(call_button="Use function")
@@ -181,6 +181,7 @@ class MainWindow(QMainWindow, TempFile):
         "invert_image" : ff.invert_image,
         "skeletonize" : ff.skeletonize,
         "Manually_merge_labels" : ff.Manually_merge_labels,
+        "wireframe" : ff.wireframe,
         "Manually_split_labels" : ff.Manually_split_labels,
         }
         try:
@@ -191,7 +192,6 @@ class MainWindow(QMainWindow, TempFile):
     @magicgui(call_button="Polt")
     def plot_widget(self):
         print("PLOTTING")
-
 
 
 def make_sub_sub_menu(self, action, title, window, action_type_tuple):
