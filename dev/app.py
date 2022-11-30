@@ -30,13 +30,18 @@ class MainWindow(QMainWindow, TempFile):
         self.setWindowTitle("2P analysis")
         self.setWindowIcon(QIcon(os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons", "logo_light.png")))
         self.setCentralWidget(self._main)
+
         # create a vertical box layout widget
         self.layout = QVBoxLayout(self._main)
-        # add a menuBar
+
+        # add an empty menuBar
         self.menu = self.menuBar()
+
         # add a napari viewer
         self.show_image_viewer()
+        # populate the menuBar
         self.create_menue_bar()
+
         # set temp dir
         self.tempconfig = TempFile()
         self.tmppath = self.tempconfig.get_tmp_path(self)
@@ -59,19 +64,18 @@ class MainWindow(QMainWindow, TempFile):
             pass
 
     def show_image_viewer(self):
-        self.viewer = napari.Viewer(show=False)
-        #self.viewer.window.qt_viewer.dockLayerList.hide()
-        #self.viewer.window.qt_viewer.dockConsole.hide()
-        #self.viewer.window.qt_viewer.dockLayerControls.hide()
+        self.viewer = napari.Viewer()
+        napari.run() # start the event loop and show the viewer (eventloop no longer started with napari.Viewer())
+
         self.viewer.window.main_menu.hide()
         self.viewer.window._status_bar.hide()
+
         self.viewer.window.add_dock_widget(self.segmenting_widget, area="right", name="Segmentation")
+
         qt_viewer = self.viewer.window._qt_window
         self.layout.addWidget(qt_viewer)
     
     def create_menue_bar(self):
-        for menu in self.viewer.window.main_menu.actions():
-            print(menu.menu())
         for action in self.viewer.window.file_menu.actions():
             data = action.data()
             try:
