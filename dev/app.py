@@ -1,21 +1,19 @@
 import sys
 import os
 import napari
-from PyQt5.QtGui import QIcon
 
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QMainWindow, QAction, QVBoxLayout, QWidget, QApplication
 from PyQt5.QtCore import QSettings
 import qdarktheme
 from magicgui import magicgui
-from enum import Enum
 
-from Config import TempFile
-from skimage.io import imread
 from enum import Enum
-import func_filters as ff
-
 from typing import Callable
 import ctypes
+
+from Config import TempFile
+import func_filters as ff
 
 # set the application user mode id for windows
 myappid = '2P-Analysis'
@@ -25,6 +23,7 @@ class MainWindow(QMainWindow, TempFile):
     def __init__(self):
         super().__init__()
         self._main = QWidget()
+
         self.settings = QSettings('2P-Analysis')
         self.get_settings()
         self.setWindowTitle("2P analysis")
@@ -64,8 +63,10 @@ class MainWindow(QMainWindow, TempFile):
             pass
 
     def show_image_viewer(self):
+        """Show the napari viewer in the main window"""
+        # ffs do not touch (╯°□°)╯︵ ┻━┻ 
         self.viewer = napari.Viewer()
-        napari.run() # start the event loop and show the viewer (eventloop no longer started with napari.Viewer())
+        self._qt_viewer = self.viewer.window._qt_viewer
 
         self.viewer.window.main_menu.hide()
         self.viewer.window._status_bar.hide()
@@ -150,7 +151,7 @@ class MainWindow(QMainWindow, TempFile):
         self.viewer.window.add_dock_widget(make_gui(action, self.viewer, *args, **kwargs), area='right', name=func.__name__)
     
     @magicgui(call_button="Use function")
-    def segmenting_widget(self, Function=Functions.gaussian_blur):
+    def segmenting_widget(self, Function=Functions.gaussian_blur, label="TEST"):
 
         # call the relevent function
         func_dict = {
