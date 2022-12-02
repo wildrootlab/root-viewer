@@ -1,7 +1,11 @@
 import os
 import shutil
-from PIL import Image
-import numpy as np
+
+class Settings:
+    def __init__(self):
+        import aicsimageio
+        from napari.settings import get_settings
+        get_settings().plugins.extension2reader = {'*': 'napari-aicsimageio', **get_settings().plugins.extension2reader}
 
 class TempFile:
     if os.name == 'nt':
@@ -14,10 +18,7 @@ class TempFile:
             os.makedirs(config_path_tmp)
     
     def __init__(self):
-        import aicsimageio
-        from napari.settings import get_settings
-        get_settings().plugins.extension2reader = {'*': 'napari-aicsimageio', **get_settings().plugins.extension2reader}
-        
+
         self.__config_path_tmp = TempFile.config_path_tmp
         # set path for tmp images folder
         self.__config_path_tmp_images = os.path.join(self.__config_path_tmp, 'images')
@@ -29,6 +30,7 @@ class TempFile:
         # clear tmp images folder (sometimes files get included when folder is created)
         for file in os.listdir(self.__config_path_tmp_images):
             os.remove(os.path.join(self.__config_path_tmp_images, file))
+    
     @staticmethod
     def get_tmp_path(self):
         return str(self.__config_path_tmp)
@@ -55,17 +57,3 @@ class TempFile:
             # if tif file check bit depth and convert if neccessary
             else:
                 pass
-    def convert_files(self, sender, app_data):
-        """INCOMPLETE"""
-        if not os.path.exists(self.__config_path_tmp_images):
-            os.makedirs(self.__config_path_tmp_images)
-
-        directory = os.path.normpath(app_data.get("current_path"))
-        num = 1
-        
-        for file in os.listdir(directory):
-            if file.endswith("tif"):
-                im = np.array(Image.open(f"{os.path.join(directory, file)}"))
-                image = Image.fromarray(im / np.amax(im) * 255).convert('L')
-                image.save(f"{os.path.join(self.__config_path_tmp_images, f'{num}.png')}")
-                num += 1

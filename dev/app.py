@@ -3,7 +3,7 @@ import os
 import napari
 
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QMainWindow, QAction, QVBoxLayout, QWidget, QApplication
+from PyQt5.QtWidgets import QMainWindow, QAction, QGridLayout, QWidget, QApplication, QTextEdit
 from PyQt5.QtCore import QSettings
 import qdarktheme
 from magicgui import magicgui
@@ -12,26 +12,27 @@ from enum import Enum
 from typing import Callable
 import ctypes
 
-from Config import TempFile
+from config import Settings
 import func_filters as ff
+from mpl_widget import MplWidget
 
 # set the application user mode id for windows
 myappid = '2P-Analysis'
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
-class MainWindow(QMainWindow, TempFile):
+class MainWindow(QMainWindow, Settings):
     def __init__(self):
         super().__init__()
         self._main = QWidget()
 
         self.settings = QSettings('2P-Analysis')
         self.get_settings()
-        self.setWindowTitle("2P analysis")
+        self.setWindowTitle("2P Analysis")
         self.setWindowIcon(QIcon(os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons", "logo_light.png")))
         self.setCentralWidget(self._main)
 
         # create a vertical box layout widget
-        self.layout = QVBoxLayout(self._main)
+        self.layout = QGridLayout(self._main)
 
         # add an empty menuBar
         self.menu = self.menuBar()
@@ -40,15 +41,24 @@ class MainWindow(QMainWindow, TempFile):
         self.show_image_viewer()
         # populate the menuBar
         self.create_menue_bar()
-
-        # set temp dir
-        self.tempconfig = TempFile()
-        self.tmppath = self.tempconfig.get_tmp_path(self)
+        
+        # initialize settings
+        self.settings = Settings()
 
         quit = QAction("Quit", self)
         quit.triggered.connect(self.closeEvent)
 
-        self.ToolsMenu = {}
+        self.analysis_functions = {}
+        self.mpl_widget = MplWidget(self)
+
+        # create utilites
+        self.create_analysis_widget()
+        self.create_mpl_widget()
+        self.create_processing_widget()
+        # update after load completes
+        self.update_window_menue()
+
+        
 
     def set_settings(self):
         self.settings.setValue("window_size", self.size())
@@ -65,16 +75,14 @@ class MainWindow(QMainWindow, TempFile):
     def show_image_viewer(self):
         """Show the napari viewer in the main window"""
         # ffs do not touch (╯°□°)╯︵ ┻━┻ 
-        self.viewer = napari.Viewer()
+        self.viewer = napari.Viewer(show=False)
         self._qt_viewer = self.viewer.window._qt_viewer
 
         self.viewer.window.main_menu.hide()
         self.viewer.window._status_bar.hide()
 
-        self.viewer.window.add_dock_widget(self.segmenting_widget, area="right", name="Segmentation")
-
         qt_viewer = self.viewer.window._qt_window
-        self.layout.addWidget(qt_viewer)
+        self.layout.addWidget(qt_viewer, 1, 0)
     
     def create_menue_bar(self):
         for action in self.viewer.window.file_menu.actions():
@@ -95,8 +103,37 @@ class MainWindow(QMainWindow, TempFile):
         file_menu = self.menu.addMenu(self.viewer.window.file_menu)
         edit_menu = self.menu.addMenu(self.viewer.window.view_menu)
         window_menu = self.menu.addMenu(self.viewer.window.window_menu)
-        #plugin_menu = self.menu.addMenu(self.viewer.window.plugins_menu)
+    
+    def plot_visibility(self):
+        self.mpl_widget_dock.setVisible(not self.mpl_widget_dock.isVisible())
+    
+    def analysis_widget_visibility(self):
+        self.analysis_widget_dock.setVisible(not self.mpl_widget_dock.isVisible())
+
+    def update_window_menue(self):
+
+        self.plot_visibility_action = QAction("plot", checkable=True)
+        self.viewer.window.window_menu.addAction(self.plot_visibility_action)
+        self.plot_visibility_action.triggered.connect(self.plot_visibility)
         
+        self.analysis_widget_visibility_action = QAction("analysis", checkable=True, checked=True)
+        self.viewer.window.window_menu.addAction(self.analysis_widget_visibility_action)
+        self.analysis_widget_visibility_action.triggered.connect(self.analysis_widget_visibility)
+
+    def create_analysis_widget(self):
+        self.analysis_widget_dock = self.viewer.window.add_dock_widget(self.analysis_widget, area="right", name="Analysis")
+        self.analysis_widget_dock._close_btn = False
+    
+    def create_mpl_widget(self):
+        self.mpl_widget_dock = self.viewer.window.add_dock_widget(self.mpl_widget, area='bottom', name='Plot')
+        self.mpl_widget_dock.setVisible(False)
+        self.mpl_widget_dock.setFloating(True)
+        self.mpl_widget_dock._close_btn = False
+
+    def create_processing_widget(self):
+        self.processing_widget_dock = self.viewer.window.add_dock_widget(self.processing_widget, area="right", name="Processing")
+        self.processing_widget_dock._close_btn = False
+
     def closeEvent(self, event):
         try:
             self.set_settings() # set the settings
@@ -105,7 +142,7 @@ class MainWindow(QMainWindow, TempFile):
             pass
 
     class Functions(Enum):
-        """Enum for the different fuctions"""
+        """Enumerator for the different fuctions"""
         gaussian_blur = "gaussian_blur"
         subtract_background = "subtract_background"
         threshold_otsu = "threshold_otsu"
@@ -142,18 +179,19 @@ class MainWindow(QMainWindow, TempFile):
         extract_slic = "extract_slic"
 
     def register_function(self, func: Callable, *args, **kwargs) -> Callable:
-                self.ToolsMenu[func.__code__] = [func, "function", args, kwargs]
-                return func
+        """Register a function into into the function dictionary"""
+        self.analysis_functions[func.__code__] = [func, "function", args, kwargs]
+        return func
             
     def open_func_gui(self, func: Callable):
         self.register_function(func)
-        action, type_, args, kwargs = self.ToolsMenu[func.__code__]
+        action, type_, args, kwargs = self.analysis_functions[func.__code__]
         self.viewer.window.add_dock_widget(make_gui(action, self.viewer, *args, **kwargs), area='right', name=func.__name__)
     
-    @magicgui(call_button="Use function")
-    def segmenting_widget(self, Function=Functions.gaussian_blur, label="TEST"):
-
-        # call the relevent function
+    @magicgui(call_button="Open function")
+    def analysis_widget(self, Function=Functions.gaussian_blur, Explanation=False):
+        from inspect import getdoc
+        # call the relevent function !!FIX THIS WITH REGISTERED FUNCTIONS!!
         func_dict = {
         "gaussian_blur" : ff.gaussian_blur,
         "subtract_background" : ff.subtract_background,
@@ -191,46 +229,43 @@ class MainWindow(QMainWindow, TempFile):
         }
         try:
             self.open_func_gui(func_dict[Function.value])
+            # create function help widget
+            if Explanation == True:
+                func_help_dock = self.viewer.window.add_dock_widget(self.func_help(func_dict[Function.value]), area='right', name=f"Help: {func_dict[Function.value].__name__}")
+                func_help_dock.setFloating(True)
+
         except Exception as e:
             print(e)
 
     @magicgui(call_button="Polt")
-    def plot_widget(self):
-        print("PLOTTING")
+    def processing_widget(label_image: "napari.types.LabelsData"):
+        print(f'{label_image}processing_function')
+
+    def func_help(self, func):
+        """Create a basic help widget for functions"""
+        func_doc = func.__doc__
+        text = [f'{func.__name__}: ', f'{func_doc}', 'Parameters: ', f'{func.__code__}']
+        text2 = '\n'.join(text)
+
+        widget = QWidget()
+        layout = QGridLayout()
+        widget.setLayout(layout)
+        
+        text_area = QTextEdit()
+        text_area.setText(text2)
+        text_area.setReadOnly(True)
+        text_area.setLineWrapColumnOrWidth(75)
+        layout.addWidget(text_area, 0,0)
+        
+        return widget
 
 
-def make_sub_sub_menu(self, action, title, window, action_type_tuple):
-    import inspect
-    def func(whatever=None):
-        sub_sub_menu = action
-        # ugh
-        napari_viewer = self.viewer
-        action, type_, args, kwargs = action_type_tuple
-        dw = None
-        if type_ == "action":
-            action(napari_viewer)
-        elif type_ == "function":
-            dw = napari_viewer.window.add_dock_widget(self.make_gui(action, napari_viewer, *args, **kwargs), area='right', name=title)
-        elif type_ == "dock_widget":
-            # Source: https://github.com/napari/napari/blob/1287e618469e765a6db0e80d11e736b738e62823/napari/_qt/qt_main_window.py#L669
-            # if the signature is looking a for a napari viewer, pass it.
-            kwargs = {}
-            for param in inspect.signature(action.__init__).parameters.values():
-                if param.name == 'napari_viewer':
-                    kwargs['napari_viewer'] = napari_viewer
-                    break
-                if param.annotation in ('napari.viewer.Viewer', napari.Viewer):
-                    kwargs[param.name] = napari_viewer
-                    break
-                # cannot look for param.kind == param.VAR_KEYWORD because
-                # QWidget allows **kwargs but errs on unknown keyword arguments
-            # instantiate the widget
-            wdg = action(**kwargs)
-            dw = napari_viewer.window.add_dock_widget(wdg, name=title)
-        if dw is not None:
-            # workaround for https://github.com/napari/napari/issues/4348
-            dw._close_btn = False
-        return sub_sub_menu
+"""
+Labels layer -> data processing -> plot
+"""
+
+
+
 
 def make_gui(func, viewer, *args, **kwargs):
     """Create a magicgui widget for a function"""
