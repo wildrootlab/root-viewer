@@ -59,8 +59,7 @@ def split_touching_objects(binary:LabelsData, sigma: float = 3.5) -> LabelsData:
     almost = np.logical_not(np.logical_xor(edges != 0, edges2 != 0)) * binary
     return binary_opening(almost)
 
-
-def Manually_merge_labels(labels_layer: layers.Labels, points_layer: layers.Points, viewer : Viewer):
+def manually_merge_labels(labels_layer: layers.Labels, points_layer: layers.Points, viewer : Viewer):
     """
     Merge labels in a labels layer by clicking on them with a points layer.
     
@@ -83,7 +82,7 @@ def Manually_merge_labels(labels_layer: layers.Labels, points_layer: layers.Poin
     labels_layer.data = labels
     points_layer.data = []
 
-def Manually_split_labels(labels_layer: layers.Labels, points_layer: layers.Points, viewer: Viewer):
+def manually_split_labels(labels_layer: layers.Labels, points_layer: layers.Points, viewer: Viewer):
     """
     Split a label at the position of a point. The point is removed after splitting.
     

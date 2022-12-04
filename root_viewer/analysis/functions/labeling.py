@@ -349,9 +349,7 @@ def seeded_watershed_with_mask(membranes:ImageData, labels:LabelsData, mask:Labe
     )
     return cells
 
-def random_walker(membranes:ImageData, labels:LabelsData, beta=130, mode='cg_j', tol=1.e-3, copy=True,
-                  return_full_prob=False, spacing=None,
-                  *, prob_tol=1e-3, channel_axis=None):
+def random_walker(membranes:ImageData, labels:LabelsData):
     """Random walker algorithm for segmentation from markers.
     
     Parameters

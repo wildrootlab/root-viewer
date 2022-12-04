@@ -1,7 +1,7 @@
 Thresholding
 =====================
 
-Example of thresholding functions.
+Examples:
 
 .. image:: ../images/skimage/sphx_glr_plot_thresholding_002.png
 
