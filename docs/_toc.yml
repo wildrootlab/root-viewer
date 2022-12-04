@@ -4,10 +4,11 @@
 format: jb-book
 root: intro
 parts:
-- caption: Intro
+- caption: Getting started
   chapters:
   - file: intro/installation
   - file: intro/quickstart
+  - file: intro/layers
 - caption: Image Functions
   chapters:
   - file: usage/Filtering

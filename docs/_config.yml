@@ -13,11 +13,7 @@ repository:
   branch: main
   path_to_book: docs
 
-# launch_buttons:
-#   notebook_interface: "jupyterlab" # The interface interactive links will activate ["classic", "jupyterlab"]
-#   binderhub_url: "https://mybinder.org"
-#   colab_url: "https://colab.research.google.com"
-#   thebe: true
+# Not sure how to set system path with yaml, copy this into top of config.py when recreated
 #import os, sys
 #sys.path.insert(0, os.path.abspath('..'))
 
@@ -31,7 +27,6 @@ sphinx:
     - sphinx.ext.autosummary
 
   config:
-    # set_type_checking_flag: True  # don't yet know how to add to path with jupyter-book
     autosummary_generate: True
     autosummary_imported_members: True
     autodoc_default_options:
@@ -56,9 +51,8 @@ sphinx:
     html_favicon: "images/favicon.ico"
     html_theme: "sphinx_material"
     html_theme_options:
-      #base_url: "https://pyapp-kit.github.io/magicgui/"  # Specify a base_url used to generate sitemap.xml links
-      repo_url: "https://github.com/pyapp-kit/magicgui/"
-      repo_name: "wildrood/magicgui"
+      repo_url: "https://github.com/wildrootlab/root-viewer"
+      repo_name: "wildrood/root-viewer"
       # google_analytics_account: "UA-XXXXX"
       # html_prettify: True
       html_minify: True
@@ -69,7 +63,7 @@ sphinx:
       color_accent: "#66E0F2"
       theme_color: "#51DBBA"
       master_doc: False
-      # version_dropdown: True,
+      version_dropdown: True,
     html_sidebars:
       "**":
         - globaltoc.html

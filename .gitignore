@@ -1,6 +1,5 @@
-2p-analysis-venv/
-src/tmp/
-src/__pycache__/
-temp/
-main.ipynb
-dev/__pycache__/
+__pycache__/
+docs/*
+
+!docs/_build
+!*/
