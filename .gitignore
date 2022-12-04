@@ -1,5 +1,0 @@
-__pycache__/
-docs/*
-
-!docs/_build
-!*/
