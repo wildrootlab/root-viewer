@@ -4,7 +4,7 @@
 [![Python Version](https://img.shields.io/pypi/pyversions/magicgui.svg)](https://python.org)
 
 
-> **Note**
+> **Note** <br>
 > This program is still in development
 
 An image analysis tool built using PyQt as a wrapper and the [Napari Viewer](https://github.com/napari/napari)
