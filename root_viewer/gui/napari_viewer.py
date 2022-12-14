@@ -1,7 +1,9 @@
 import napari
 from PyQt5 import QtCore
 from gui.widgets.analysis import AnalysisWidget
-from analysis.segmentation import widget_wrapper
+from analysis.segmentation import widget_wrapper as segmentation_widget_wrapper
+from analysis.stardist import plugin_dock_widget as stardist_plugin_dock_widget
+
 class Viewer(AnalysisWidget):
     def __init__(self):
         super().__init__()
@@ -20,16 +22,14 @@ class Viewer(AnalysisWidget):
 
     def init_tabs(self):
         """Initialize the tabs for the analysis widget"""
-        self.segmentation_tab = self.viewer.window.add_dock_widget(widget_wrapper(), area='right', name='Auto-segmentation')
-        self.filtering_tab = self.viewer.window.add_dock_widget(self.filtering_widget.layout, name='Filtering')
-        self.thresholding_tab = self.viewer.window.add_dock_widget(self.thresholding_widget.layout, name='Thresholding')
-        self.labeling_tab = self.viewer.window.add_dock_widget(self.labeling_widget.layout, name='Labeling')
-        self.misc_tab = self.viewer.window.add_dock_widget(self.misc_widget.layout, name='Misc')
+        self.segmentation_tab = self.viewer.window.add_dock_widget(segmentation_widget_wrapper(), area='right', name='Basic Segmentation')
+        self.stardist_tab = self.viewer.window.add_dock_widget(stardist_plugin_dock_widget(), area='right', name='Advanced Segmentation')
+        #self.filtering_tab = self.viewer.window.add_dock_widget(self.filtering_widget.layout, name='Filtering')
+        #self.thresholding_tab = self.viewer.window.add_dock_widget(self.thresholding_widget.layout, name='Thresholding')
+        #self.labeling_tab = self.viewer.window.add_dock_widget(self.labeling_widget.layout, name='Labeling')
+        #self.misc_tab = self.viewer.window.add_dock_widget(self.misc_widget.layout, name='Misc')
         
-        self.viewer.window._qt_window.tabifyDockWidget(self.filtering_tab, self.thresholding_tab) 
-        self.viewer.window._qt_window.tabifyDockWidget(self.filtering_tab, self.labeling_tab) 
-        self.viewer.window._qt_window.tabifyDockWidget(self.filtering_tab, self.misc_tab)
-        self.viewer.window._qt_window.tabifyDockWidget(self.filtering_tab, self.segmentation_tab)
+
 
     def init_analysis_widget(self, widget):
         """Add a widget to the napari viewer"""

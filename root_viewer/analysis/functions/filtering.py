@@ -241,7 +241,7 @@ def median_filter(image:ImageData, size: float = 2)-> ImageData:
     the specialised function `scipy.signal.medfilt2d` may be faster. It is
     however limited to constant mode with ``cval=0``.
     
-    .. image:: ../../images/skimage/scipy-ndimage-median_filter-1
+    .. image:: ../../images/skimage/scipy-ndimage-median_filter-1.png
     """
     return ndi.median_filter(image.astype(float), size=int(size * 2 + 1))
 
@@ -464,12 +464,12 @@ def invert_image(image: ImageData, signed: bool = False) -> ImageData:
     """Inverts the intensity range of the input image, so that the dtype maximum
     is now the dtype minimum, and vice-versa. 
     
-    This operation is
-    slightly different depending on the input dtype:
+    This operation is slightly different depending on the input dtype:
     - unsigned integers: subtract the image from the dtype maximum
     - signed integers: subtract the image from -1 (see Notes)
     - floats: subtract the image from 1 (if signed_float is False, so we
       assume the image is unsigned), or from 0 (if signed_float is True).
+    
     See the examples for clarification.
     
     Parameters
@@ -480,7 +480,7 @@ def invert_image(image: ImageData, signed: bool = False) -> ImageData:
         If True and the image is of type float, the range is assumed to
         be [-1, 1]. If False and the image is of type float, the range is
         assumed to be [0, 1].
-   
+    
     Returns
     -------
     inverted : ndarray
@@ -544,31 +544,55 @@ def butterworth(image: ImageData, cutoff_frequency_ratio: float = 0.005, high_pa
     
     Notes
     -----
-    A band-pass filter can be achieved by combining a high pass and low
-    pass filter.
-    The literature contains multiple conventions for the functional form of
-    the Butterworth filter. Here it is implemented as the n-dimensional form of
+    A band-pass filter can be achieved by combining a high-pass and low-pass
+    filter. The user can increase `npad` if boundary artifacts are apparent.
+    The "Butterworth filter" used in image processing textbooks (e.g. [1]_,
+    [2]_) is often the square of the traditional Butterworth filters as
+    described by [3]_, [4]_. The squared version will be used here if
+    `squared_butterworth` is set to ``True``. The lowpass, squared Butterworth
+    filter is given by the following expression for the lowpass case:
+
     .. math::
-        \\frac{1}{1 - \\left(\\frac{f}{c*f_{max}}\\right)^{2*n}}
-    with :math:`f` the absolute value of the spatial frequency, :math:`c` the
-    ``cutoff_frequency_ratio`` and :math:`n` the ``order`` modeled after [2]_
+
+        H_{low}(f) = \\frac{1}{1 + \\left(\\frac{f}{c f_s}\\right)^{2n}}
+    
+    with the highpass case given by
+
+    .. math::
+
+        H_{hi}(f) = 1 - H_{low}(f)
+    
+    where :math:`f=\\sqrt{\\sum_{d=0}^{\\mathrm{ndim}} f_{d}^{2}}` is the
+    absolute value of the spatial frequency, :math:`f_s` is the sampling
+    frequency, :math:`c` the ``cutoff_frequency_ratio``, and :math:`n` is the
+    filter `order` [1]_. When ``squared_butterworth=False``, the square root of
+    the above expressions are used instead.
+    Note that ``cutoff_frequency_ratio`` is defined in terms of the sampling
+    frequency, :math:`f_s`. The FFT spectrum covers the Nyquist range
+    (:math:`[-f_s/2, f_s/2]`) so ``cutoff_frequency_ratio`` should have a value
+    between 0 and 0.5. The frequency response (gain) at the cutoff is 0.5 when
+    ``squared_butterworth`` is true and :math:`1/\\sqrt{2}` when it is false.
     
     Examples
     --------
-    Apply a high pass and low pass Butterworth filter to a grayscale and
+    Apply a high-pass and low-pass Butterworth filter to a grayscale and
     color image respectively:
-
     >>> from skimage.data import camera, astronaut
     >>> from skimage.filters import butterworth
     >>> high_pass = butterworth(camera(), 0.07, True, 8)
     >>> low_pass = butterworth(astronaut(), 0.01, False, 4, channel_axis=-1)
+
+    .. image:: ../../images/skimage/sphx_glr_plot_butterworth_001.png
     
     References
     ----------
-    .. [1] Butterworth, Stephen. "On the theory of filter amplifiers."
+    .. [1] Russ, John C., et al. The Image Processing Handbook, 3rd. Ed.
+           1999, CRC Press, LLC.
+    .. [2] Birchfield, Stan. Image Processing and Analysis. 2018. Cengage
+           Learning.
+    .. [3] Butterworth, Stephen. "On the theory of filter amplifiers."
            Wireless Engineer 7.6 (1930): 536-541.
-    .. [2] Russ, John C., et al. "The image processing handbook."
-           Computers in Physics 8.2 (1994): 177-178.
+    .. [4] https://en.wikipedia.org/wiki/Butterworth_filter
     """
     from skimage.filters import butterworth
     return butterworth(image, cutoff_frequency_ratio, high_pass, order)

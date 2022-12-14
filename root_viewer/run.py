@@ -9,7 +9,6 @@ if __name__ == "__main__":
         qapp = QApplication(sys.argv)
     splash = gui.splash.SplashScreen()
     qapp.setStyleSheet(qdarktheme.load_stylesheet())
-    print('test')
     app = gui.main_window.MainWindow()
     app.show()
     splash.close_splash()

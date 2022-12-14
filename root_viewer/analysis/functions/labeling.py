@@ -69,16 +69,19 @@ def expand_labels(label_image: LabelsData, distance: float = 1) -> LabelsData:
     Where multiple connected components are within ``distance`` pixels of a background
     pixel, the label value of the closest connected component will be assigned (see
     Notes for the case of multiple labels at equal distance).
+    
     Parameters
     ----------
     label_image : ndarray of dtype int
         label image
     distance : float
         Euclidean distance in pixels by which to grow the labels. Default is one.
+    
     Returns
     -------
     enlarged_labels : ndarray of dtype int
         Labeled array, where all connected regions have been enlarged
+    
     Notes
     -----
     Where labels are spaced more than ``distance`` pixels are apart, this is
@@ -91,13 +94,16 @@ def expand_labels(label_image: LabelsData, distance: float = 1) -> LabelsData:
     multiple regions, as it is not defined which region expands into that
     space. Here, the exact behavior depends on the upstream implementation
     of ``scipy.ndimage.distance_transform_edt``.
+    
     See Also
     --------
     :func:`skimage.measure.label`, :func:`skimage.segmentation.watershed`, :func:`skimage.morphology.dilation`
+    
     References
     ----------
     .. [1] https://cellprofiler.org
     .. [2] https://github.com/CellProfiler/CellProfiler/blob/082930ea95add7b72243a4fa3d39ae5145995e9c/cellprofiler/modules/identifysecondaryobjects.py#L559
+    
     Examples
     --------
     >>> labels = np.array([0, 1, 0, 0, 0, 0, 2])
@@ -321,6 +327,7 @@ def seeded_watershed_with_mask(membranes:ImageData, labels:LabelsData, mask:Labe
     --------
     The watershed algorithm is useful to separate overlapping objects.
     We first generate an initial image with two overlapping circles:
+    
     >>> x, y = np.indices((80, 80))
     >>> x1, y1, x2, y2 = 28, 28, 44, 52
     >>> r1, r2 = 16, 20

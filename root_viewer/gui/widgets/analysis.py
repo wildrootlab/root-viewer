@@ -101,7 +101,7 @@ class FunctionsWidget:
         """Format the function docstring"""
         import textwrap
         try:
-            doc = doc.split('----------')[0]
+            doc = doc.split('Parameters')[0]
         except: pass
         doc = textwrap.wrap(doc, width=50)
         doc = '\n'.join(doc)

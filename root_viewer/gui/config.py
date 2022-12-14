@@ -10,7 +10,7 @@ class Settings:
         # set main reader
         get_settings().plugins.extension2reader = {'*': 'napari-aicsimageio', **get_settings().plugins.extension2reader}
         
-        get_settings().plugins.extension2reader = {'*.tif': 'bfio', **get_settings().plugins.extension2reader}
+        #get_settings().plugins.extension2reader = {'*.tif': 'bfio', **get_settings().plugins.extension2reader}
 
 
 

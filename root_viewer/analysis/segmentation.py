@@ -99,6 +99,9 @@ def widget_wrapper():
         return maski 
 
     @magicgui(
+        label_head=dict(
+            widget_type="Label", label=f'<h1>Basic Segmentation</h1>'
+        ),
         call_button='run segmentation',  
         layout='vertical',
         model_type = dict(widget_type='ComboBox', label='model type', choices=['cyto', 'nuclei', 'cyto2', 'custom'], value='cyto', tooltip='there is a <em>cyto</em> model, a new <em>cyto2</em> model from user submissions, and a <em>nuclei</em> model'),
@@ -119,7 +122,7 @@ def widget_wrapper():
         output_flows = dict(widget_type='CheckBox', text='output flows and cellprob', value=True),
         output_outlines = dict(widget_type='CheckBox', text='output outlines', value=True),
     )
-    def widget(#label_logo, 
+    def widget(label_head, 
         viewer: Viewer,
         image_layer: Image,
         model_type,
@@ -246,6 +249,11 @@ def widget_wrapper():
         cp_worker.returned.connect(_new_segmentation)
         cp_worker.start()
 
+    widget.label_head.value = '<small>A generalist algorithm for cellular segmentation</small>'
+    from qtpy.QtWidgets import QSizePolicy 
+
+    # make labels prettier (https://doc.qt.io/qt-5/qsizepolicy.html#Policy-enum)
+    widget.label_head.native.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
 
     def update_masks(masks):     
         from cellpose.utils import masks_to_outlines

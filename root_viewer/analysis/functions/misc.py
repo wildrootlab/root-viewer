@@ -10,14 +10,27 @@ from skimage.segmentation import watershed
 
 def split_touching_objects(binary:LabelsData, sigma: float = 3.5) -> LabelsData:
     """
-    Takes a binary image and creates cuts in the objects similar to the ImageJ watershed algorithm. This splits connected objects when not to dense. 
-    NOTE: If the nuclei are too dense, consider using stardist or cellpose.
+    Takes a binary image and splits the objects similar to the ImageJ watershed algorithm. This splits connected objects when not to dense.
     
-    See also
-    --------
+    .. warning:: If the nuclei are too dense, consider using stardist or cellpose.
+    
+    Parameters
+    ----------
+    binary : LabelsData
+        A binary image with objects to split
+    sigma : float, optional
+        The sigma for the gaussian filter, by default 3.5
+    Returns
+    -------
+    LabelsData
+        The split objects
+    
+    References
+    ----------
     .. [1] https://imagej.nih.gov/ij/docs/menus/process.html#watershed
     .. [2] https://www.napari-hub.org/plugins/stardist-napari
     .. [3] https://www.napari-hub.org/plugins/cellpose-napari
+    .. [4] https://scikit-image.org/docs/dev/auto_examples/segmentation/plot_watershed.html
     """
     def _sobel_3d(image):
         kernel = np.asarray([
