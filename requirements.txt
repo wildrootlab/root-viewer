@@ -78,14 +78,12 @@ libclang==14.0.6
 llvmlite==0.39.1
 locket==1.0.0
 lxml==4.9.1
-magicgui==0.6.1
 Markdown==3.4.1
 MarkupSafe==2.1.1
 matplotlib==3.6.2
 matplotlib-inline==0.1.6
 mrc==0.3.0
 multidict==6.0.3
-napari==0.4.17
 napari-aicsimageio==0.7.2
 napari-console==0.0.7
 napari-plugin-engine==0.2.0

@@ -1,5 +1,6 @@
-__pycache__/
+*__pycache__/
 docs/*
-
 !docs/_build
 !*/
+# how do i git push to a new branch?
+# git push origin master:master

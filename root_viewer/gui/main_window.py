@@ -17,10 +17,9 @@ class MainWindow(QMainWindow, Viewer, Settings):
         super().__init__()
         self._main = QWidget()
         self.debug=DEBUG
-        print(self.debug)
         self.settings = QSettings('Root-Viewer')
         self.get_settings()
-        self.setWindowTitle("2P Analysis")
+        self.setWindowTitle("Root Viewer")
         self.setWindowIcon(QIcon(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "icons", "logo_light.png")))
         self.setCentralWidget(self._main)
 
@@ -45,21 +44,10 @@ class MainWindow(QMainWindow, Viewer, Settings):
 
     def create_analysis_widget(self):
         """Creates the analysis widgets and adds them to the main window."""  
-        # This is a temporary method to add the analysis widget to the main window
-        # TODO: create private class for the analysis widget
-        
-        segmentation = self.segmentation_tab
-        segmentation._close_btn = False
-        segmentation._hide_btn = False
-        segmentation._float_btn = False
+        self.addDockWidget(Qt.RightDockWidgetArea, self.N_basic_seg)
 
-        self.addDockWidget(Qt.RightDockWidgetArea, segmentation)
-        
-        stardist = self.stardist_tab
-        stardist._close_btn = False
-        stardist._hide_btn = False
-        stardist._float_btn = False
-        self.tabifyDockWidget(segmentation, stardist)
+        self.tabifyDockWidget(self.N_basic_seg, self.N_adv_seg)
+        self.tabifyDockWidget(self.N_adv_seg, self.filtering_tab)
     
     def closeEvent(self, event):
         try:
