@@ -2,5 +2,3 @@
 docs/*
 !docs/_build
 !*/
-# how do i git push to a new branch?
-# git push origin master:master
