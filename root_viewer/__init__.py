@@ -1,5 +1,5 @@
-import os
-
+import os, sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _true = set(("y", "yes", "t", "true", "on", "1"))
 DEBUG = os.environ.get("DEBUG", "").lower() in _true
 NOPERSIST = os.environ.get("NOPERSIST", "").lower() in _true

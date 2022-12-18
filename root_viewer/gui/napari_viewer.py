@@ -1,4 +1,4 @@
-import napari
+import root_viewer.backend as napari
 from gui.widgets.analysis import AnalysisWidget
 
 class Viewer(AnalysisWidget):
@@ -54,4 +54,3 @@ class Viewer(AnalysisWidget):
     def set_analysis_widget(self):
         """Set the values for the analysis widget"""
         self._set_filtering(self)
-        
