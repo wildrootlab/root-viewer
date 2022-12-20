@@ -18,7 +18,7 @@ from typing import (
 
 from weakref import WeakValueDictionary
 
-from qtpy.QtCore import Qt
+from qtpy.QtCore import Qt, QSettings
 from qtpy.QtGui import QIcon, QImage
 from qtpy.QtWidgets import (
     QApplication,
@@ -31,7 +31,7 @@ from qtpy.QtWidgets import (
 )
 
 from root_viewer.backend._qt.qt_event_loop import ICON_PATH, get_app, _defaults
-from root_viewer.backend._qt.qt_napari_viewer import Napari
+from root_viewer.backend._qt.qt_napari_viewer import Napari, NapariWidgets
 from root_viewer.backend._qt.widgets.dock_widgets import QtViewerDockWidget
 
 from napari._qt.widgets.qt_viewer_dock_widget import _SHORTCUT_DEPRECATION_STRING
@@ -42,7 +42,7 @@ from napari.utils.misc import in_jupyter
 from napari.utils.theme import _themes, get_system_theme
 from napari.utils.translations import trans
 from napari.settings import get_settings
-
+from napari._qt.qt_resources import get_stylesheet
 _sentinel = object()
 
 from magicgui.widgets import Widget
@@ -112,26 +112,27 @@ class _QtMainWindow(QMainWindow):
     _instances: ClassVar[List['_QtMainWindow']] = []
 
     def __init__(
-        self, window: 'Window', parent=None
+        self, window: 'Window', parent=None, theme: str = 'dark'
     ) -> None:
         super().__init__(parent)
         # create QApplication if it doesn't already exist
         get_app()
         
         self.main_widow = window
+        self.setStyleSheet(get_stylesheet(theme))
         
+        # temporary method for settings until we have a settings manager
+        self.settings = QSettings('Root Viewer')
+        self.get_settings()
+
         self.setWindowTitle("Root Viewer")
         self.setWindowIcon(QIcon(self._window_icon))
 
         self.napari = NapariQtApp()
 
         self._qt_viewer = self.napari._qt_viewer
-        
-        self.viewer_widget = self.napari.viewer_widget
 
-        self.napari_file_menu = self.napari.file_menu
-        self.napari_view_menu = self.napari.view_menu
-        self.napari_window_menu = self.napari.window_menu
+        self.viewer_widget = self.napari.viewer_widget
 
         
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
@@ -146,6 +147,27 @@ class _QtMainWindow(QMainWindow):
         self.setCentralWidget(center)
         
         _QtMainWindow._instances.append(self)
+    
+    def get_settings(self):
+        """Load Settings"""
+        try:
+            self.resize(self.settings.value("window_size"))
+            self.move(self.settings.value("window_pos"))
+        except:
+            pass
+    
+    def set_settings(self):
+        try:
+            self.settings.setValue("window_size", self.size())
+            self.settings.setValue("window_pos", self.pos())
+        except: pass
+    
+    def closeEvent(self, event):
+        """Cleanup when window is closed."""
+        self.set_settings()
+        self.napari.close_all()
+        _QtMainWindow._instances.remove(self)
+        super().closeEvent(event)
 
 
 class Window:
@@ -170,7 +192,7 @@ class Window:
         Window menu.
     """
 
-    def __init__(self, *, show: bool = True):
+    def __init__(self, *, show: bool = True) -> None:
         # create an instance of the napari viewer
         #self.viewer = Viewer(show=False)
 
@@ -184,29 +206,27 @@ class Window:
 
         # connect the Viewer and create the Main Window
         self.main_widow = _QtMainWindow(self)
-        self.viewer_widget = self.main_widow.viewer_widget
+        self.viewer_widget = self.main_widow.napari.viewer_widget
 
-        self.napari_file_menu = self.main_widow.napari_file_menu
-        self.napari_view_menu = self.main_widow.napari_view_menu
-        self.napari_window_menu = self.main_widow.napari_window_menu
+        self.napari_widgets = NapariWidgets(self.main_widow.napari)
         self._add_menus()
 
         #self._update_theme()
 
-        get_settings().appearance.events.theme.connect(self._update_theme)
+        #get_settings().appearance.events.theme.connect(self._update_theme)
 
         self._add_viewer_dock_widget(
-            self.viewer_widget.dockConsole,
+            self.napari_widgets.dockConsole,
             tabify=False,
             #add_custom_title_bar=False,
         )
         self._add_viewer_dock_widget(
-            self.viewer_widget.dockLayerControls,
+            self.napari_widgets.dockLayerControls,
             tabify=False,
             #add_custom_title_bar=False,
         )
         self._add_viewer_dock_widget(
-            self.viewer_widget.dockLayerList,
+            self.napari_widgets.dockLayerList,
             tabify=False,
             #add_custom_title_bar=False,
         )
@@ -302,25 +322,30 @@ class Window:
     def _add_menus(self):
         """Add menus to the menubar."""
         self.main_menu = self.main_widow.menuBar()
+        self.file_menu = self.main_menu.addMenu('&File')
+        self.view_menu = self.main_menu.addMenu('&View')
+        self.window_menu = self.main_menu.addMenu('&Window')
 
-        for action in self.napari_file_menu.actions():
+        for action in self.main_widow.napari.file_menu.actions():
             data = action.data()
             try:
                 name = data.get('text')
-                if name in ['Save Screenshot...', 'Save Screenshot with Viewer...','Copy Screenshot to Clipboard','Copy Screenshot with Viewer to Clipboard', 'Close Window']:
-                    self.napari_file_menu.removeAction(action)
+                if name not in ['Save Screenshot...', 'Save Screenshot with Viewer...','Copy Screenshot to Clipboard','Copy Screenshot with Viewer to Clipboard', 'Close Window']:
+                    self.file_menu.addAction(action)
             except: pass
-        for action in self.napari_view_menu.actions():
+        for action in self.main_widow.napari.view_menu.actions():
             data = action.data()
             try:
                 name = data.get('text')
-                if name in ['Toggle Full Screen', 'Toggle Menubar Visibility']:
-                    self.napari_file_menu.removeAction(action)
+                if name not in ['Toggle Full Screen', 'Toggle Menubar Visibility']:
+                    self.view_menu.addAction(action)
+            except: pass
+        for action in self.main_widow.napari.window_menu.actions():
+            data = action.data()
+            try:
+                self.window_menu.addAction(action)
             except: pass
 
-        file_menu = self.main_menu.addMenu(self.napari_file_menu)
-        edit_menu = self.main_menu.addMenu(self.napari_view_menu)
-        window_menu = self.main_menu.addMenu(self.napari_window_menu)
 
     def _toggle_menubar_visible(self):
         """Toggle visibility of app menubar.
@@ -920,6 +945,7 @@ class Window:
         _themes.events.added.disconnect(self._add_theme)
         _themes.events.removed.disconnect(self._remove_theme)
         self.viewer_widget.viewer.layers.events.disconnect(self.file_menu.update)
+        self.main_widow.closeEvent
         for menu in self.file_menu._INSTANCES:
             with contextlib.suppress(RuntimeError):
                 menu._destroy()
