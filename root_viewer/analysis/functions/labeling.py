@@ -1,18 +1,23 @@
-from napari.types import ImageData, LabelsData
 import numpy as np
-from skimage.filters import threshold_otsu, gaussian
-from skimage.morphology import local_maxima, local_minima
+from napari.types import ImageData, LabelsData
+from skimage.filters import gaussian, threshold_otsu
 from skimage.measure import label, regionprops
-from skimage.segmentation import relabel_sequential as _relabel_sequential, clear_border as _clear_border, expand_labels, watershed as _watershed, random_walker as _random_walker
+from skimage.morphology import local_maxima, local_minima
+from skimage.segmentation import clear_border as _clear_border
+from skimage.segmentation import expand_labels
+from skimage.segmentation import random_walker as _random_walker
+from skimage.segmentation import relabel_sequential as _relabel_sequential
+from skimage.segmentation import watershed as _watershed
 
-def remove_labels_on_edges(label_image: LabelsData, buffer_size:int = 1) -> LabelsData:
+
+def remove_labels_on_edges(label_image: LabelsData, buffer_size: int = 1) -> LabelsData:
     """Clear objects connected to the label image border.
-    
+
     Parameters
     ----------
     labels : (M[, N[, ..., P]]) array of int or bool
         Imaging data labels.
-    
+
     buffer_size : int, optional
         The width of the border examined.  By default, only objects
         that touch the outside of the image are removed.
@@ -21,7 +26,7 @@ def remove_labels_on_edges(label_image: LabelsData, buffer_size:int = 1) -> Labe
     -------
     out : ndarray
         Imaging data labels with cleared borders
-    
+
     Examples
     --------
     >>> import numpy as np
@@ -69,19 +74,19 @@ def expand_labels(label_image: LabelsData, distance: float = 1) -> LabelsData:
     Where multiple connected components are within ``distance`` pixels of a background
     pixel, the label value of the closest connected component will be assigned (see
     Notes for the case of multiple labels at equal distance).
-    
+
     Parameters
     ----------
     label_image : ndarray of dtype int
         label image
     distance : float
         Euclidean distance in pixels by which to grow the labels. Default is one.
-    
+
     Returns
     -------
     enlarged_labels : ndarray of dtype int
         Labeled array, where all connected regions have been enlarged
-    
+
     Notes
     -----
     Where labels are spaced more than ``distance`` pixels are apart, this is
@@ -94,16 +99,16 @@ def expand_labels(label_image: LabelsData, distance: float = 1) -> LabelsData:
     multiple regions, as it is not defined which region expands into that
     space. Here, the exact behavior depends on the upstream implementation
     of ``scipy.ndimage.distance_transform_edt``.
-    
+
     See Also
     --------
     :func:`skimage.measure.label`, :func:`skimage.segmentation.watershed`, :func:`skimage.morphology.dilation`
-    
+
     References
     ----------
     .. [1] https://cellprofiler.org
     .. [2] https://github.com/CellProfiler/CellProfiler/blob/082930ea95add7b72243a4fa3d39ae5145995e9c/cellprofiler/modules/identifysecondaryobjects.py#L559
-    
+
     Examples
     --------
     >>> labels = np.array([0, 1, 0, 0, 0, 0, 2])
@@ -126,16 +131,18 @@ def expand_labels(label_image: LabelsData, distance: float = 1) -> LabelsData:
     array([[2, 1, 1, 0],
            [2, 2, 0, 0],
            [2, 3, 3, 0]])
-    
+
     .. image:: ../../images/skimage/sphx_glr_plot_expand_labels_001.png
     """
 
     return expand_labels(np.asarray(label_image), distance=distance)
 
 
-def voronoi_otsu_labeling(image:ImageData, spot_sigma: float = 2, outline_sigma: float = 2) -> LabelsData:
-    """Voronoi-Otsu-Labeling is a segmentation algorithm for blob-like structures such as nuclei and granules with high signal intensity on low-intensity background. 
-    
+def voronoi_otsu_labeling(
+    image: ImageData, spot_sigma: float = 2, outline_sigma: float = 2
+) -> LabelsData:
+    """Voronoi-Otsu-Labeling is a segmentation algorithm for blob-like structures such as nuclei and granules with high signal intensity on low-intensity background.
+
     Parameters
     ----------
     image : ndarray
@@ -144,12 +151,12 @@ def voronoi_otsu_labeling(image:ImageData, spot_sigma: float = 2, outline_sigma:
         Standard deviation of the Gaussian kernel used to smooth the image. Controls how close detected cells can be
     outline_sigma : float, optional
         Standard deviation of the Gaussian kernel used to smooth the outlines. Controls how precise segmented objects are.
-    
+
     Returns
     -------
     labels : ndarray
         Labeled image.
-    
+
     References
     ----------
     .. [1] https://github.com/clEsperanto/pyclesperanto_prototype/blob/master/demo/segmentation/voronoi_otsu_labeling.ipynb
@@ -175,7 +182,7 @@ def voronoi_otsu_labeling(image:ImageData, spot_sigma: float = 2, outline_sigma:
     return labels
 
 
-def gauss_otsu_labeling(image:ImageData, outline_sigma: float = 2) -> LabelsData:
+def gauss_otsu_labeling(image: ImageData, outline_sigma: float = 2) -> LabelsData:
     """Gauss-Otsu-Labeling can be used to segment objects such as nuclei with bright intensity on
     low intensity background images.
 
@@ -185,7 +192,7 @@ def gauss_otsu_labeling(image:ImageData, outline_sigma: float = 2) -> LabelsData
         Input image.
     outline_sigma : float, optional
         Standard deviation of the Gaussian kernel used to smooth the outlines. Controls how precise segmented objects are.
-    
+
     Returns
     -------
     labels : ndarray
@@ -206,7 +213,7 @@ def gauss_otsu_labeling(image:ImageData, outline_sigma: float = 2) -> LabelsData
     return labels
 
 
-def seeded_watershed(membranes:ImageData, labels:LabelsData) -> LabelsData:
+def seeded_watershed(membranes: ImageData, labels: LabelsData) -> LabelsData:
     """Finds the watershed basins in `image` flooded from given `labels`.
 
     Parameters
@@ -218,19 +225,19 @@ def seeded_watershed(membranes:ImageData, labels:LabelsData) -> LabelsData:
         values to be assigned in the label matrix. Zero means not a marker. If
         ``None`` (no markers given), the local minima of the image are used as
         markers.
-    
+
     Returns
     -------
     out : ndarray
         A labeled matrix of the same type and shape as markers
-    
+
     See Also
     --------
     random_walker : random walker segmentation
         A segmentation algorithm based on anisotropic diffusion, usually
         slower than the watershed but with good results on noisy data and
         boundaries with holes.
-    
+
     Notes
     -----
     This function implements a watershed algorithm [1]_ [2]_ that apportions
@@ -251,7 +258,7 @@ def seeded_watershed(membranes:ImageData, labels:LabelsData) -> LabelsData:
     the local minima of the gradient of the image, or the local maxima of the
     distance function to the background for separating overlapping objects
     (see example).
-    
+
     References
     ----------
     .. [1] https://en.wikipedia.org/wiki/Watershed_%28image_processing%29
@@ -261,14 +268,14 @@ def seeded_watershed(membranes:ImageData, labels:LabelsData) -> LabelsData:
            Algorithms. ICPR 2014, pp 996-1001. :DOI:`10.1109/ICPR.2014.181`
            https://www.tu-chemnitz.de/etit/proaut/publications/cws_pSLIC_ICPR.pdf
     """
-    cells = _watershed(
-        np.asarray(membranes),
-        np.asarray(labels)
-    )
+    cells = _watershed(np.asarray(membranes), np.asarray(labels))
     return cells
 
-def seeded_watershed_with_mask(membranes:ImageData, labels:LabelsData, mask:LabelsData) -> LabelsData:
-    """ Finds the watershed basins in `image` flooded from given `labels` and masks is.
+
+def seeded_watershed_with_mask(
+    membranes: ImageData, labels: LabelsData, mask: LabelsData
+) -> LabelsData:
+    """Finds the watershed basins in `image` flooded from given `labels` and masks is.
 
     Parameters
     ----------
@@ -287,14 +294,14 @@ def seeded_watershed_with_mask(membranes:ImageData, labels:LabelsData, mask:Labe
     -------
     out : ndarray
         A labeled matrix of the same type and shape as markers
-    
+
     See Also
     --------
     random_walker : random walker segmentation
         A segmentation algorithm based on anisotropic diffusion, usually
         slower than the watershed but with good results on noisy data and
         boundaries with holes.
-    
+
     Notes
     -----
     This function implements a watershed algorithm [1]_ [2]_ that apportions
@@ -327,7 +334,7 @@ def seeded_watershed_with_mask(membranes:ImageData, labels:LabelsData, mask:Labe
     --------
     The watershed algorithm is useful to separate overlapping objects.
     We first generate an initial image with two overlapping circles:
-    
+
     >>> x, y = np.indices((80, 80))
     >>> x1, y1, x2, y2 = 28, 28, 44, 52
     >>> r1, r2 = 16, 20
@@ -349,16 +356,13 @@ def seeded_watershed_with_mask(membranes:ImageData, labels:LabelsData, mask:Labe
     The algorithm works also for 3-D images, and can be used for example to
     separate overlapping spheres.
     """
-    cells = _watershed(
-        np.asarray(membranes),
-        np.asarray(labels),
-        mask=mask
-    )
+    cells = _watershed(np.asarray(membranes), np.asarray(labels), mask=mask)
     return cells
 
-def random_walker(membranes:ImageData, labels:LabelsData):
+
+def random_walker(membranes: ImageData, labels: LabelsData):
     """Random walker algorithm for segmentation from markers.
-    
+
     Parameters
     ----------
     data : array_like
@@ -388,13 +392,13 @@ def random_walker(membranes:ImageData, labels:LabelsData):
           `(nlabels, labels.shape)`. `output[label_nb, i, j]` is the
           probability that label `label_nb` reaches the pixel `(i, j)`
           first.
-    
+
     See Also
     --------
     seeded_watershed : watershed segmentation
         A segmentation algorithm based on mathematical morphology
         and "flooding" of regions from markers.
-    
+
     Notes
     -----
     Multichannel inputs are scaled with all channel data combined. Ensure all
@@ -427,13 +431,13 @@ def random_walker(membranes:ImageData, labels:LabelsData):
     where x_m = 1 on markers of the given phase, and 0 on other markers.
     This linear system is solved in the algorithm using a direct method for
     small images, and an iterative method for larger images.
-    
+
     References
     ----------
     .. [1] Leo Grady, Random walks for image segmentation, IEEE Trans Pattern
         Anal Mach Intell. 2006 Nov;28(11):1768-83.
         :DOI:`10.1109/TPAMI.2006.233`.
-    
+
     Examples
     --------
     >>> rng = np.random.default_rng()
@@ -456,13 +460,16 @@ def random_walker(membranes:ImageData, labels:LabelsData):
     """
     return _random_walker(membranes, labels)
 
-def local_minima_seeded_watershed(image:ImageData, spot_sigma: float = 10, outline_sigma: float = 0) -> LabelsData:
+
+def local_minima_seeded_watershed(
+    image: ImageData, spot_sigma: float = 10, outline_sigma: float = 0
+) -> LabelsData:
     """
     Segment cells in images with fluorescently marked membranes.
     The two sigma parameters allow tuning the segmentation result. The first sigma controls how close detected cells
     can be (spot_sigma) and the second controls how precise segmented objects are outlined (outline_sigma). Under the
     hood, this filter applies two Gaussian blurs, local minima detection and a seeded watershed.
-    
+
     Finds the watershed basins in `image` flooded from given `labels`.
 
     Parameters
@@ -475,19 +482,19 @@ def local_minima_seeded_watershed(image:ImageData, spot_sigma: float = 10, outli
         The sigma parameter for the Gaussian blur applied to the image before watershed segmentation. Controls how precise segmented objects are outlined.
     can be
 
-    
+
     Returns
     -------
     out : ndarray
         A labeled matrix of the same type and shape as markers
-    
+
     See Also
     --------
     random_walker : random walker segmentation
         A segmentation algorithm based on anisotropic diffusion, usually
         slower than the watershed but with good results on noisy data and
         boundaries with holes.
-    
+
     Notes
     -----
     This function implements a watershed algorithm [1]_ [2]_ that apportions
@@ -508,7 +515,7 @@ def local_minima_seeded_watershed(image:ImageData, spot_sigma: float = 10, outli
     the local minima of the gradient of the image, or the local maxima of the
     distance function to the background for separating overlapping objects
     (see example).
-    
+
     References
     ----------
     .. [1] https://en.wikipedia.org/wiki/Watershed_%28image_processing%29
@@ -534,7 +541,12 @@ def local_minima_seeded_watershed(image:ImageData, spot_sigma: float = 10, outli
     return _watershed(outline_blurred, spots)
 
 
-def thresholded_local_minima_seeded_watershed(image:ImageData, spot_sigma: float = 3, outline_sigma: float = 0, minimum_intensity: float = 500) -> LabelsData:
+def thresholded_local_minima_seeded_watershed(
+    image: ImageData,
+    spot_sigma: float = 3,
+    outline_sigma: float = 0,
+    minimum_intensity: float = 500,
+) -> LabelsData:
     """
     Segment cells in images with marked membranes that have a high signal intensity.
     The two sigma parameters allow tuning the segmentation result. The first sigma controls how close detected cells
@@ -542,21 +554,27 @@ def thresholded_local_minima_seeded_watershed(image:ImageData, spot_sigma: float
     hood, this filter applies two Gaussian blurs, local minima detection and a seeded watershed.
     Afterwards, all objects are removed that have an average intensity below a given minimum_intensity
     """
-    labels = local_minima_seeded_watershed(image, spot_sigma=spot_sigma, outline_sigma=outline_sigma)
+    labels = local_minima_seeded_watershed(
+        image, spot_sigma=spot_sigma, outline_sigma=outline_sigma
+    )
 
     # measure intensities
     stats = regionprops(labels, image)
     intensities = [r.mean_intensity for r in stats]
 
     # filter labels with low intensity
-    new_label_indices, _, _ = _relabel_sequential((np.asarray(intensities) > minimum_intensity) * np.arange(labels.max()))
+    new_label_indices, _, _ = _relabel_sequential(
+        (np.asarray(intensities) > minimum_intensity) * np.arange(labels.max())
+    )
     new_label_indices = np.insert(new_label_indices, 0, 0)
     new_labels = np.take(np.asarray(new_label_indices, np.uint32), labels)
 
     return new_labels
 
 
-def connected_component_labeling(binary_image: LabelsData, exclude_on_edges: bool = False) -> LabelsData:
+def connected_component_labeling(
+    binary_image: LabelsData, exclude_on_edges: bool = False
+) -> LabelsData:
     """
     Takes a binary image and produces a label image with all separated objects labeled with
     different integer numbers.
@@ -572,12 +590,14 @@ def connected_component_labeling(binary_image: LabelsData, exclude_on_edges: boo
     else:
         return label(np.asarray(binary_image))
 
+
 def skeletonize(image: LabelsData) -> LabelsData:
     """
     Skeletonize labeled objects in an image. This can be useful to reduce objects such as neurons, roots and vessels
     with variable thickness to single pixel lines for further analysis.
     """
     from skimage import morphology
+
     if image.max() == 1:
         return morphology.skeletonize(image)
     else:

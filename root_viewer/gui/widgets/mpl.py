@@ -1,10 +1,12 @@
+import random
+
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import \
+    FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import \
+    NavigationToolbar2QT as NavigationToolbar
 from PyQt5.QtWidgets import QDialog, QPushButton, QVBoxLayout
 
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-import matplotlib.pyplot as plt
-
-import random
 
 class MplWidget(QDialog):
     def __init__(self, parent=None):
@@ -17,14 +19,14 @@ class MplWidget(QDialog):
         # it takes the `figure` instance as a parameter to __init__
         self.canvas = FigureCanvas(self.figure)
         self.figure.set_facecolor("none")
-        #self.setStyleSheet("background-color:#3F4852;")
+        # self.setStyleSheet("background-color:#3F4852;")
 
         # this is the Navigation widget
         # it takes the Canvas widget and a parent
         self.toolbar = NavigationToolbar(self.canvas, self)
 
         # Just some button connected to `plot` method
-        self.button = QPushButton('Plot')
+        self.button = QPushButton("Plot")
         self.button.clicked.connect(self.plot)
 
         # set the layout
@@ -35,7 +37,7 @@ class MplWidget(QDialog):
         self.setLayout(layout)
 
     def plot(self):
-        ''' plot some random stuff '''
+        """plot some random stuff"""
         # random data
         data = [random.random() for i in range(10)]
 
@@ -49,7 +51,7 @@ class MplWidget(QDialog):
         # ax.hold(False) # deprecated, see above
 
         # plot data
-        ax.plot(data, '*-')
+        ax.plot(data, "*-")
 
         # refresh canvas
         self.canvas.draw()

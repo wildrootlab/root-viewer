@@ -1,10 +1,10 @@
-from napari.types import ImageData, LabelsData
 import numpy as np
+from napari.types import ImageData, LabelsData
 from scipy import ndimage as ndi
 from skimage.restoration import rolling_ball
 
 
-def gaussian_blur(image:ImageData, sigma: float = 1) -> ImageData:
+def gaussian_blur(image: ImageData, sigma: float = 1) -> ImageData:
     """Multi-dimensional Gaussian filter
 
     Parameters
@@ -21,7 +21,7 @@ def gaussian_blur(image:ImageData, sigma: float = 1) -> ImageData:
     -------
     filtered_image : ndarray
         the filtered image
-    
+
     Notes
     -----
     This function is a wrapper around :func:`scipy.ndi.gaussian_filter`.
@@ -29,7 +29,7 @@ def gaussian_blur(image:ImageData, sigma: float = 1) -> ImageData:
     The ``output`` should be floating point data type since gaussian converts
     to float provided ``image``. If ``output`` is not provided, another array
     will be allocated and returned as the result.
-    
+
     The multi-dimensional filter is implemented as a sequence of
     one-dimensional convolution filters. The intermediate arrays are
     stored in the same data type as the output. Therefore, for output
@@ -38,10 +38,11 @@ def gaussian_blur(image:ImageData, sigma: float = 1) -> ImageData:
     precision.
     """
     from skimage.filters import gaussian
+
     return gaussian(image, sigma)
 
 
-def gaussian_laplace(image:ImageData, sigma: float = 2)-> ImageData:
+def gaussian_laplace(image: ImageData, sigma: float = 2) -> ImageData:
     """Multidimensional Laplace filter using Gaussian second derivatives.
 
     Parameters
@@ -57,33 +58,39 @@ def gaussian_laplace(image:ImageData, sigma: float = 2)-> ImageData:
     -------
     laplace : ndarray
         The array in which to place the output, or the dtype of the returned array. By default an array of the same dtype as input will be created.
-    
+
     .. image:: ../../images/skimage/scipy-ndimage-gaussian_laplace-1.png
     """
     return ndi.gaussian_laplace(image.astype(float), sigma)
 
-def percentile_filter(image:ImageData, percentile : float = 50, size: float = 2)-> ImageData:
+
+def percentile_filter(
+    image: ImageData, percentile: float = 50, size: float = 2
+) -> ImageData:
     """The percentile filter is similar to the median-filter but it allows specifying the percentile.
     The percentile-filter with percentile==50 is equal to the median-filter.
-    
+
     Parameters
     ----------
     percentile : scalar
         The percentile parameter may be less than zero, i.e.,
         percentile = -20 equals percentile = 80
     size_foot : flaot
-        Gives the shape that is taken from the input array, at every element position, to define the input to the filter function. We adjust size to the number of dimensions of the input array, so that, if the size is 2, then the actual size used for the filtering is (2,2,2). 
+        Gives the shape that is taken from the input array, at every element position, to define the input to the filter function. We adjust size to the number of dimensions of the input array, so that, if the size is 2, then the actual size used for the filtering is (2,2,2).
 
     Returns
     -------
     percentile_filter : ndarray
         Filtered array. Has the same shape as `input`.
-    
+
     .. image:: ../../images/skimage/scipy-ndimage-percentile_filter-1.png
     """
-    return ndi.percentile_filter(image.astype(float), percentile=percentile, size=int(size * 2 + 1))
+    return ndi.percentile_filter(
+        image.astype(float), percentile=percentile, size=int(size * 2 + 1)
+    )
 
-def sobel(image:ImageData, axis : int = 0) -> ImageData:
+
+def sobel(image: ImageData, axis: int = 0) -> ImageData:
     """Sobel edge filter.
 
     Parameters
@@ -113,9 +120,10 @@ def sobel(image:ImageData, axis : int = 0) -> ImageData:
     """
     return ndi.sobel(image.astype(float))
 
+
 def sobel_3d(image: ImageData) -> ImageData:
     """Sobel edge filter in 3D
-    
+
     Parameters
     ----------
     image : ndarray
@@ -132,27 +140,19 @@ def sobel_3d(image: ImageData) -> ImageData:
 
     .. image:: ../../images/skimage/scipy-ndimage-sobel-1.png
     """
-    kernel = np.asarray([
+    kernel = np.asarray(
         [
-            [0, 0, 0],
-            [0, 1, 0],
-            [0, 0, 0]
-        ], [
-            [0, 1, 0],
-            [1, -6, 1],
-            [0, 1, 0]
-        ], [
-            [0, 0, 0],
-            [0, 1, 0],
-            [0, 0, 0]
+            [[0, 0, 0], [0, 1, 0], [0, 0, 0]],
+            [[0, 1, 0], [1, -6, 1], [0, 1, 0]],
+            [[0, 0, 0], [0, 1, 0], [0, 0, 0]],
         ]
-    ])
+    )
     return ndi.convolve(image, kernel)
 
 
-def white_tophat(image:ImageData, size: float = 2)-> ImageData:
+def white_tophat(image: ImageData, size: float = 2) -> ImageData:
     """Multidimensional white tophat filter.
-    
+
     Parameters
     ----------
     input : array_like
@@ -160,7 +160,7 @@ def white_tophat(image:ImageData, size: float = 2)-> ImageData:
     size : tuple of ints
         Shape of a flat and full structuring element used for the filter.
         Optional if `footprint` or `structure` is provided.
-    
+
     Returns
     -------
     output : ndarray
@@ -170,10 +170,13 @@ def white_tophat(image:ImageData, size: float = 2)-> ImageData:
     --------
     black_tophat
     """
-    return ndi.white_tophat(image.astype(float), size=int(size * 2 + 1), )
+    return ndi.white_tophat(
+        image.astype(float),
+        size=int(size * 2 + 1),
+    )
 
 
-def black_tophat(image:ImageData, size: float = 2)-> ImageData:
+def black_tophat(image: ImageData, size: float = 2) -> ImageData:
     """Multidimensional black tophat filter.
 
     Parameters
@@ -188,7 +191,7 @@ def black_tophat(image:ImageData, size: float = 2)-> ImageData:
     -------
     black_tophat : ndarray
         Result of the filter of `input` with `structure`.
-    
+
     See also
     --------
     white_tophat
@@ -197,63 +200,63 @@ def black_tophat(image:ImageData, size: float = 2)-> ImageData:
     return ndi.black_tophat(image.astype(float), size=int(size * 2 + 1))
 
 
-def minimum_filter(image:ImageData, size: float = 2)-> ImageData:
+def minimum_filter(image: ImageData, size: float = 2) -> ImageData:
     """Calculate a multidimensional minimum filter. Can be used for noise and background removal.
-    
+
     Parameters
     ----------
     image : ImageData
     size : flaot
-        Gives the shape that is taken from the input array, at every element position, to define the input to the filter function. We adjust size to the number of dimensions of the input array, so that, if the size is 2, then the actual size used for the filtering is (2,2,2). 
+        Gives the shape that is taken from the input array, at every element position, to define the input to the filter function. We adjust size to the number of dimensions of the input array, so that, if the size is 2, then the actual size used for the filtering is (2,2,2).
 
     Returns
     -------
     minimum_filter : ndarray
         Filtered array. Has the same shape as `input`.
-    
+
     Notes
     -----
     A sequence of modes (one per axis) is only supported when the footprint is
     separable. Otherwise, a single mode string must be provided.
-    
+
     .. image:: ../../images/skimage/scipy-ndimage-minimum_filter-1.png
     """
     return ndi.minimum_filter(image.astype(float), size=size * 2 + 1)
 
 
-def median_filter(image:ImageData, size: float = 2)-> ImageData:
+def median_filter(image: ImageData, size: float = 2) -> ImageData:
     """Calculate a multidimensional median filter.
 
     Parameters
     ----------
     image : ImageData
     size : flaot
-        Gives the shape that is taken from the input array, at every element position, to define the input to the filter function. We adjust size to the number of dimensions of the input array, so that, if the size is 2, then the actual size used for the filtering is (2,2,2). 
-    
+        Gives the shape that is taken from the input array, at every element position, to define the input to the filter function. We adjust size to the number of dimensions of the input array, so that, if the size is 2, then the actual size used for the filtering is (2,2,2).
+
     Returns
     -------
     median_filter : ndarray
         Filtered array. Has the same shape as `input`.
-    
+
     Notes
     -----
     For 2-dimensional images with ``uint8``, ``float32`` or ``float64`` dtypes
     the specialised function `scipy.signal.medfilt2d` may be faster. It is
     however limited to constant mode with ``cval=0``.
-    
+
     .. image:: ../../images/skimage/scipy-ndimage-median_filter-1.png
     """
     return ndi.median_filter(image.astype(float), size=int(size * 2 + 1))
 
 
-def maximum_filter(image:ImageData, size: float = 2)-> ImageData:
+def maximum_filter(image: ImageData, size: float = 2) -> ImageData:
     """Calculate a multidimensional maximum filter. In the context of cell segmentation it can be used to make membranes wider and close small gaps of insufficient staining.
 
     Parameters
     ----------
     image : ImageData
     size : flaot
-        Gives the shape that is taken from the input array, at every element position, to define the input to the filter function. We adjust size to the number of dimensions of the input array, so that, if the size is 2, then the actual size used for the filtering is (2,2,2). 
+        Gives the shape that is taken from the input array, at every element position, to define the input to the filter function. We adjust size to the number of dimensions of the input array, so that, if the size is 2, then the actual size used for the filtering is (2,2,2).
 
     Returns
     -------
@@ -264,13 +267,13 @@ def maximum_filter(image:ImageData, size: float = 2)-> ImageData:
     -----
     A sequence of modes (one per axis) is only supported when the footprint is
     separable. Otherwise, a single mode string must be provided.
-   
+
     .. image:: ../../images/skimage/scipy-ndimage-maximum_filter-1.png
     """
     return ndi.maximum_filter(image.astype(float), size=size * 2 + 1)
 
 
-def morphological_gradient(image:ImageData, size: float = 2)-> ImageData:
+def morphological_gradient(image: ImageData, size: float = 2) -> ImageData:
     """ Apply gradient filter (similar to the Sobel operator) for edge detection / edge enhancement. This is similar to applying a Gaussian-blur to an image and afterwards the gradient operator.
     
     The morphological gradient is calculated as the difference between a
@@ -346,9 +349,9 @@ def morphological_gradient(image:ImageData, size: float = 2)-> ImageData:
     return ndi.morphological_gradient(image.astype(float), size=int(size * 2 + 1))
 
 
-def subtract_background(image:ImageData, rolling_ball_radius: float = 5) -> ImageData:
+def subtract_background(image: ImageData, rolling_ball_radius: float = 5) -> ImageData:
     """Estimate background intensity by rolling/translating a kernel. This rolling ball algorithm estimates background intensity for a ndimage in case of uneven exposure. It is a generalization of the frequently used rolling ball algorithm [1]_.
-    
+
     Parameters
     ----------
     image : ndarray
@@ -356,12 +359,12 @@ def subtract_background(image:ImageData, rolling_ball_radius: float = 5) -> Imag
     rolling_ball_radius : int, optional
         Radius of a ball shaped kernel to be rolled/translated in the image.
         Used if ``kernel = None``.
-   
+
     Returns
     -------
     background : ndarray
         The estimated background of the image.
-    
+
     Notes
     -----
     For the pixel that has its background intensity estimated (without loss
@@ -376,26 +379,26 @@ def subtract_background(image:ImageData, rolling_ball_radius: float = 5) -> Imag
     This algorithm is sensitive to noise (in particular salt-and-pepper
     noise). If this is a problem in your image, you can apply mild
     gaussian smoothing before passing the image to this function.
-    
+
     References
     ----------
     .. [1] Sternberg, Stanley R. "Biomedical image processing." Computer 1
            (1983): 22-34. :DOI:`10.1109/MC.1983.1654163`
-   
+
     .. image:: ../../images/skimage/sphx_glr_plot_rolling_ball_001.png
     """
-    background = rolling_ball(image, radius = rolling_ball_radius)
+    background = rolling_ball(image, radius=rolling_ball_radius)
     return image - background
 
 
-def binary_invert(binary_image:LabelsData) -> LabelsData:
+def binary_invert(binary_image: LabelsData) -> LabelsData:
     """Inverts a binary image
-    
+
     Parameters
     ----------
     binary_image : ndarray
         The binary image to be inverted.
-    
+
     Returns
     -------
     inverted : ndarray
@@ -404,7 +407,9 @@ def binary_invert(binary_image:LabelsData) -> LabelsData:
     return (np.asarray(binary_image) == 0) * 1
 
 
-def sum_images(image1: ImageData, image2: ImageData, factor1: float = 1, factor2: float = 1) -> ImageData:
+def sum_images(
+    image1: ImageData, image2: ImageData, factor1: float = 1, factor2: float = 1
+) -> ImageData:
     """Add two images
     Parameters
     ----------
@@ -416,7 +421,7 @@ def sum_images(image1: ImageData, image2: ImageData, factor1: float = 1, factor2
         The factor to multiply the first image with.
     factor2 : float
         The factor to multiply the second image with.
-    
+
     Returns
     -------
     summed : ndarray
@@ -433,7 +438,7 @@ def multiply_images(image1: ImageData, image2: ImageData) -> ImageData:
         The first image to be multiplied.
     image2 : ndarray
         The second image to be multiplied.
-    
+
     Returns
     -------
     multiplied : ndarray
@@ -444,14 +449,14 @@ def multiply_images(image1: ImageData, image2: ImageData) -> ImageData:
 
 def divide_images(image1: ImageData, image2: ImageData) -> ImageData:
     """Divide one image by another
-    
+
     Parameters
     ----------
     image1 : ndarray
         The image to be divided.
     image2 : ndarray
         The image to divide by.
-    
+
     Returns
     -------
     divided : ndarray
@@ -462,16 +467,16 @@ def divide_images(image1: ImageData, image2: ImageData) -> ImageData:
 
 def invert_image(image: ImageData, signed: bool = False) -> ImageData:
     """Inverts the intensity range of the input image, so that the dtype maximum
-    is now the dtype minimum, and vice-versa. 
-    
+    is now the dtype minimum, and vice-versa.
+
     This operation is slightly different depending on the input dtype:
     - unsigned integers: subtract the image from the dtype maximum
     - signed integers: subtract the image from -1 (see Notes)
     - floats: subtract the image from 1 (if signed_float is False, so we
       assume the image is unsigned), or from 0 (if signed_float is True).
-    
+
     See the examples for clarification.
-    
+
     Parameters
     ----------
     image : ndarray
@@ -480,12 +485,12 @@ def invert_image(image: ImageData, signed: bool = False) -> ImageData:
         If True and the image is of type float, the range is assumed to
         be [-1, 1]. If False and the image is of type float, the range is
         assumed to be [0, 1].
-    
+
     Returns
     -------
     inverted : ndarray
         Inverted image.
-    
+
     Notes
     -----
     Ideally, for signed integers we would simply multiply by -1. However,
@@ -493,7 +498,7 @@ def invert_image(image: ImageData, signed: bool = False) -> ImageData:
     of possible values is [-128, 127], so that -128 * -1 equals -128! By
     subtracting from -1, we correctly map the maximum dtype value to the
     minimum.
-    
+
     Examples
     --------
     >>> img = np.array([[100,  0, 200],
@@ -516,13 +521,19 @@ def invert_image(image: ImageData, signed: bool = False) -> ImageData:
     array([[-0.  , -1.  ,  1.  ,  0.25]])
     """
     from skimage import util
+
     return util.invert(image, signed)
 
-def butterworth(image: ImageData, cutoff_frequency_ratio: float = 0.005, high_pass: bool = False,
-                order: float = 2) -> ImageData:
+
+def butterworth(
+    image: ImageData,
+    cutoff_frequency_ratio: float = 0.005,
+    high_pass: bool = False,
+    order: float = 2,
+) -> ImageData:
     """Apply a Butterworth filter to enhance high or low frequency features.
     This filter is defined in the Fourier domain.
-    
+
     Parameters
     ----------
     image : (M[, N[, ..., P]][, C]) ndarray
@@ -541,7 +552,7 @@ def butterworth(image: ImageData, cutoff_frequency_ratio: float = 0.005, high_pa
     -------
     result : ndarray
         The Butterworth-filtered image.
-    
+
     Notes
     -----
     A band-pass filter can be achieved by combining a high-pass and low-pass
@@ -555,13 +566,13 @@ def butterworth(image: ImageData, cutoff_frequency_ratio: float = 0.005, high_pa
     .. math::
 
         H_{low}(f) = \\frac{1}{1 + \\left(\\frac{f}{c f_s}\\right)^{2n}}
-    
+
     with the highpass case given by
 
     .. math::
 
         H_{hi}(f) = 1 - H_{low}(f)
-    
+
     where :math:`f=\\sqrt{\\sum_{d=0}^{\\mathrm{ndim}} f_{d}^{2}}` is the
     absolute value of the spatial frequency, :math:`f_s` is the sampling
     frequency, :math:`c` the ``cutoff_frequency_ratio``, and :math:`n` is the
@@ -572,7 +583,7 @@ def butterworth(image: ImageData, cutoff_frequency_ratio: float = 0.005, high_pa
     (:math:`[-f_s/2, f_s/2]`) so ``cutoff_frequency_ratio`` should have a value
     between 0 and 0.5. The frequency response (gain) at the cutoff is 0.5 when
     ``squared_butterworth`` is true and :math:`1/\\sqrt{2}` when it is false.
-    
+
     Examples
     --------
     Apply a high-pass and low-pass Butterworth filter to a grayscale and
@@ -583,7 +594,7 @@ def butterworth(image: ImageData, cutoff_frequency_ratio: float = 0.005, high_pa
     >>> low_pass = butterworth(astronaut(), 0.01, False, 4, channel_axis=-1)
 
     .. image:: ../../images/skimage/sphx_glr_plot_butterworth_001.png
-    
+
     References
     ----------
     .. [1] Russ, John C., et al. The Image Processing Handbook, 3rd. Ed.
@@ -595,4 +606,5 @@ def butterworth(image: ImageData, cutoff_frequency_ratio: float = 0.005, high_pa
     .. [4] https://en.wikipedia.org/wiki/Butterworth_filter
     """
     from skimage.filters import butterworth
+
     return butterworth(image, cutoff_frequency_ratio, high_pass, order)

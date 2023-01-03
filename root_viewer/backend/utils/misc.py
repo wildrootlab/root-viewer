@@ -1,5 +1,7 @@
 from enum import Enum, EnumMeta
+
 from napari.utils.translations import trans
+
 
 class StringEnumMeta(EnumMeta):
     def __getitem__(self, item):
@@ -29,7 +31,7 @@ class StringEnumMeta(EnumMeta):
             else:
                 raise ValueError(
                     trans._(
-                        '{class_name} may only be called with a `str` or an instance of {class_name}. Got {dtype}',
+                        "{class_name} may only be called with a `str` or an instance of {class_name}. Got {dtype}",
                         deferred=True,
                         class_name=cls,
                     )
@@ -47,6 +49,7 @@ class StringEnumMeta(EnumMeta):
 
     def keys(self):
         return list(map(str, self))
+
 
 class StringEnum(Enum, metaclass=StringEnumMeta):
     def _generate_next_value_(name, start, count, last_values):

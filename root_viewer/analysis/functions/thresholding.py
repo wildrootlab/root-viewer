@@ -1,31 +1,32 @@
-from napari.types import ImageData, LabelsData
 import numpy as np
+from napari.types import ImageData, LabelsData
 
-def threshold_otsu(image:ImageData) -> LabelsData:
+
+def threshold_otsu(image: ImageData) -> LabelsData:
     """Returns thresholded image based on Otsu's method.
-    
+
     Parameters
     ----------
     image : (N, M[, ..., P]) ndarray, optional
         Grayscale input image.
-    
+
     Returns
     -------
     threshold : ndarray
         Upper threshold value. All pixels with an intensity higher than
         this value are assumed to be foreground.
-    
+
     References
     ----------
     .. [1] Wikipedia, https://en.wikipedia.org/wiki/Otsu's_Method
-    
+
     Examples
     --------
     >>> from skimage.data import camera
     >>> image = camera()
     >>> thresh = threshold_otsu(image)
     >>> binary = image <= thresh
-    
+
     .. image:: ../../images/skimage/sphx_glr_plot_thresholding_001.png
 
     Notes
@@ -33,13 +34,14 @@ def threshold_otsu(image:ImageData) -> LabelsData:
     The input image must be grayscale.
     """
     from skimage.filters import threshold_otsu
+
     threshold = threshold_otsu(np.asarray(image))
     binary_otsu = image > threshold
 
     return binary_otsu * 1
 
 
-def threshold_yen(image:ImageData) -> LabelsData:
+def threshold_yen(image: ImageData) -> LabelsData:
     """Returns thresholded image based on Yen's method.
 
     Parameters
@@ -65,18 +67,19 @@ def threshold_yen(image:ImageData) -> LabelsData:
     .. [3] ImageJ AutoThresholder code, http://fiji.sc/wiki/index.php/Auto_Threshold
     """
     from skimage.filters import threshold_yen
+
     return image > threshold_yen(image)
 
 
-def threshold_isodata(image:ImageData, return_all:bool = False) -> LabelsData:
+def threshold_isodata(image: ImageData, return_all: bool = False) -> LabelsData:
     """Returns thresholded image based on ISODATA method.
 
     Histogram-based threshold, known as Ridler-Calvard method or inter-means.
     Threshold values returned satisfy the following equality::
-        
+
         threshold = (image[image <= threshold].mean() +
                      image[image > threshold].mean()) / 2.0
-    
+
     That is, returned thresholds are intensities that separate the image into
     two groups of pixels, where the threshold intensity is midway between the
     mean intensities of these groups.
@@ -99,7 +102,7 @@ def threshold_isodata(image:ImageData, return_all:bool = False) -> LabelsData:
     -------
     threshold : ndarray
         Threshold value(s).
-    
+
     References
     ----------
     .. [1] Ridler, TW & Calvard, S (1978), "Picture thresholding using an
@@ -115,12 +118,15 @@ def threshold_isodata(image:ImageData, return_all:bool = False) -> LabelsData:
            http://fiji.sc/wiki/index.php/Auto_Threshold
     """
     from skimage.filters import threshold_isodata
+
     return image > threshold_isodata(image, return_all)
 
 
-def threshold_li(image:ImageData, tolerance:float = 2, initial_guess:float = 2) -> LabelsData:
+def threshold_li(
+    image: ImageData, tolerance: float = 2, initial_guess: float = 2
+) -> LabelsData:
     """Returns thresholded image by Li's iterative Minimum Cross Entropy method.
-    
+
     Parameters
     ----------
     image : (N, M[, ..., P]) ndarray
@@ -139,13 +145,13 @@ def threshold_li(image:ImageData, tolerance:float = 2, initial_guess:float = 2) 
         and return a float value. Example valid callables include
         ``numpy.mean`` (default), ``lambda arr: numpy.quantile(arr, 0.95)``,
         or even :func:`skimage.filters.threshold_otsu`.
-    
+
     Returns
     -------
     threshold : ndarray
         Upper threshold value. All pixels with an intensity higher than
         this value are assumed to be foreground.
-    
+
     References
     ----------
     .. [1] Li C.H. and Lee C.K. (1993) "Minimum Cross Entropy Thresholding"
@@ -161,23 +167,24 @@ def threshold_li(image:ImageData, tolerance:float = 2, initial_guess:float = 2) 
     .. [4] ImageJ AutoThresholder code, http://fiji.sc/wiki/index.php/Auto_Threshold
     """
     from skimage.filters import threshold_li
+
     return image > threshold_li(image, tolerance, initial_guess)
 
 
-def threshold_mean(image :ImageData) -> LabelsData:
+def threshold_mean(image: ImageData) -> LabelsData:
     """Returns thresholded image based on the mean of grayscale values.
-    
+
     Parameters
     ----------
     image : (N, M[, ..., P]) ndarray
         Grayscale input image.
-    
+
     Returns
     -------
     threshold : ndarray
         Upper threshold value. All pixels with an intensity higher than
         this value are assumed to be foreground.
-    
+
     References
     ----------
     .. [1] C. A. Glasbey, "An analysis of histogram-based thresholding
@@ -186,10 +193,11 @@ def threshold_mean(image :ImageData) -> LabelsData:
         :DOI:`10.1006/cgip.1993.1040`
     """
     from skimage.filters import threshold_mean
+
     return image > threshold_mean(image)
 
 
-def threshold_minimum(image :ImageData) -> LabelsData:
+def threshold_minimum(image: ImageData) -> LabelsData:
     """Return threshold value based on minimum method.
     The histogram of the input ``image`` is computed if not provided and
     smoothed until there are only two maxima. Then the minimum in between is
@@ -209,19 +217,19 @@ def threshold_minimum(image :ImageData) -> LabelsData:
         Histogram to determine the threshold from and a corresponding array
         of bin center intensities. Alternatively, only the histogram can be
         passed.
-    
+
     Returns
     -------
     threshold : float
         Upper threshold value. All pixels with an intensity higher than
         this value are assumed to be foreground.
-    
+
     Raises
     ------
     RuntimeError
         If unable to find two local maxima in the histogram or if the
         smoothing takes more than 1e4 iterations.
-    
+
     References
     ----------
     .. [1] C. A. Glasbey, "An analysis of histogram-based thresholding
@@ -232,17 +240,23 @@ def threshold_minimum(image :ImageData) -> LabelsData:
            :DOI:`10.1111/j.1749-6632.1965.tb11715.x`
     """
     from skimage.filters import threshold_minimum
+
     try:
         return image > threshold_minimum(image)
     except RuntimeError:
-        from napari.utils.notifications import Notification 
-        Notification(message='Unable to threshold image. Please try another method.', severity='INFO', title='Thresholding Error')
+        from napari.utils.notifications import Notification
+
+        Notification(
+            message="Unable to threshold image. Please try another method.",
+            severity="INFO",
+            title="Thresholding Error",
+        )
         return image > 0
 
 
-def threshold_triangle(image:ImageData) -> LabelsData:
+def threshold_triangle(image: ImageData) -> LabelsData:
     """Return threshold value based on the triangle algorithm.
-    
+
     Parameters
     ----------
     image : (N, M[, ..., P]) ndarray
@@ -253,7 +267,7 @@ def threshold_triangle(image:ImageData) -> LabelsData:
     threshold : ndarray
         Upper threshold value. All pixels with an intensity higher than
         this value are assumed to be foreground.
-    
+
     References
     ----------
     .. [1] Zack, G. W., Rogers, W. E. and Latt, S. A., 1977,
@@ -264,4 +278,5 @@ def threshold_triangle(image:ImageData) -> LabelsData:
        http://fiji.sc/wiki/index.php/Auto_Threshold
     """
     from skimage.filters import threshold_triangle
+
     return image > threshold_triangle(image)

@@ -2,27 +2,28 @@ import warnings
 from typing import ClassVar
 from weakref import WeakSet
 
-from root_viewer.backend._qt.widgets.dock_widgets import QtViewerDockWidget
-
+from napari._qt.containers import QtLayerList
+from napari._qt.layer_controls import QtLayerControlsContainer
+from napari._qt.widgets.qt_viewer_buttons import (QtLayerButtons,
+                                                  QtViewerButtons)
+from napari.components import ViewerModel
+from napari.utils.action_manager import action_manager
+from napari.utils.translations import trans
 from qtpy.QtCore import QCoreApplication, Qt
 from qtpy.QtWidgets import QSplitter, QVBoxLayout, QWidget
 
-from napari.components import ViewerModel
-from napari.utils.translations import trans
-from napari.utils.action_manager import action_manager
-from napari._qt.containers import QtLayerList
-from napari._qt.layer_controls import QtLayerControlsContainer
-from napari._qt.widgets.qt_viewer_buttons import QtLayerButtons, QtViewerButtons
+from root_viewer.backend._qt.widgets.dock_widgets import QtViewerDockWidget
 
 
 class Napari(ViewerModel):
-    """The Napari application.
-    """
-    _window: 'Window' = None  # type: ignore
-    _instances: ClassVar[WeakSet['Napari']] = WeakSet()
+    """The Napari application."""
+
+    _window: "Window" = None  # type: ignore
+    _instances: ClassVar[WeakSet["Napari"]] = WeakSet()
+
     def __init__(self):
         super().__init__(
-            title='Root Viewer',
+            title="Root Viewer",
             ndisplay=2,
             order=(),
             axis_labels=(),
@@ -30,7 +31,6 @@ class Napari(ViewerModel):
         # we delay initialization of plugin system to the first instantiation
         # of a viewer... rather than just on import of plugins module
         from napari.plugins import _initialize_plugins
-
         # having this import here makes all of Qt imported lazily, upon
         # instantiating the first Viewer.
         from napari.window import Window as NapariWindow
@@ -42,7 +42,7 @@ class Napari(ViewerModel):
 
     # Expose private window publically. This is needed to keep window off pydantic model
     @property
-    def window(self) -> 'NapariWindow':
+    def window(self) -> "NapariWindow":
         return self._window
 
     def update_console(self, variables):
@@ -99,6 +99,7 @@ class Napari(ViewerModel):
             viewer.close()
         return ret
 
+
 class NapariWidgets(QSplitter):
     """Qt widgets for the napari Viewer model using custom QtViewerDockWidget.
 
@@ -124,7 +125,10 @@ class NapariWidgets(QSplitter):
 
     _instances = WeakSet()
 
-    def __init__(self, viewer: ViewerModel, ):
+    def __init__(
+        self,
+        viewer: ViewerModel,
+    ):
 
         super().__init__()
         self._instances.add(self)
@@ -145,11 +149,11 @@ class NapariWidgets(QSplitter):
         self._dockLayerControls = None
         self._dockConsole = None
         self._dockPerformance = None
-    
+
     def _ensure_connect(self):
         # lazy load console
         id(self.console)
-    
+
     @property
     def controls(self) -> QtLayerControlsContainer:
         if self._controls is None:
@@ -181,7 +185,7 @@ class NapariWidgets(QSplitter):
     def dockLayerList(self) -> QtViewerDockWidget:
         if self._dockLayerList is None:
             layerList = QWidget()
-            layerList.setObjectName('layerList')
+            layerList.setObjectName("layerList")
             layerListLayout = QVBoxLayout()
             layerListLayout.addWidget(self.layerButtons)
             layerListLayout.addWidget(self.layers)
@@ -191,10 +195,10 @@ class NapariWidgets(QSplitter):
             self._dockLayerList = QtViewerDockWidget(
                 self,
                 layerList,
-                name=trans._('layer list'),
-                area='left',
-                allowed_areas=['left', 'right'],
-                object_name='layer list',
+                name=trans._("layer list"),
+                area="left",
+                allowed_areas=["left", "right"],
+                object_name="layer list",
                 close_btn=False,
             )
         return self._dockLayerList
@@ -205,10 +209,10 @@ class NapariWidgets(QSplitter):
             self._dockLayerControls = QtViewerDockWidget(
                 self,
                 self.controls,
-                name=trans._('layer controls'),
-                area='left',
-                allowed_areas=['left', 'right'],
-                object_name='layer controls',
+                name=trans._("layer controls"),
+                area="left",
+                allowed_areas=["left", "right"],
+                object_name="layer controls",
                 close_btn=False,
             )
         return self._dockLayerControls
@@ -219,10 +223,10 @@ class NapariWidgets(QSplitter):
             self._dockConsole = QtViewerDockWidget(
                 self,
                 QWidget(),
-                name=trans._('console'),
-                area='bottom',
-                allowed_areas=['top', 'bottom'],
-                object_name='console',
+                name=trans._("console"),
+                area="bottom",
+                allowed_areas=["top", "bottom"],
+                object_name="console",
                 close_btn=False,
             )
             self._dockConsole.setVisible(False)
@@ -234,30 +238,30 @@ class NapariWidgets(QSplitter):
         """QtConsole: iPython console terminal integrated into the napari GUI."""
         if self._console is None:
             try:
-                from napari_console import QtConsole
-
                 import napari
+                from napari_console import QtConsole
 
                 with warnings.catch_warnings():
                     warnings.filterwarnings("ignore")
                     self.console = QtConsole(self.viewer)
                     self.console.push(
-                        {'napari': napari, 'action_manager': action_manager}
+                        {"napari": napari, "action_manager": action_manager}
                     )
             except ModuleNotFoundError:
                 warnings.warn(
                     trans._(
-                        'napari-console not found. It can be installed with'
+                        "napari-console not found. It can be installed with"
                         ' "pip install napari_console"'
                     )
                 )
                 self._console = None
             except ImportError:
                 import traceback
+
                 traceback.print_exc()
                 warnings.warn(
                     trans._(
-                        'error importing napari-console. See console for full error.'
+                        "error importing napari-console. See console for full error."
                     )
                 )
                 self._console = None
@@ -269,7 +273,3 @@ class NapariWidgets(QSplitter):
         if console is not None:
             self.dockConsole.setWidget(console)
             console.setParent(self.dockConsole)
-
-
-
-

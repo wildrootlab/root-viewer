@@ -6,13 +6,10 @@ import socket
 from contextlib import contextmanager
 
 import qtpy
-from qtpy.QtCore import (
-    QCoreApplication,
-    QSocketNotifier,
-    QThread,
-)
+from qtpy.QtCore import QCoreApplication, QSocketNotifier, QThread
 
 RICH_TEXT_PATTERN = re.compile("<[^\n]+>")
+
 
 def qt_might_be_rich_text(text) -> bool:
     """
@@ -39,6 +36,7 @@ def in_qt_main_thread():
         True if we are in the main thread, False otherwise.
     """
     return QCoreApplication.instance().thread() == QThread.currentThread()
+
 
 @contextmanager
 def _maybe_allow_interrupt(qapp):

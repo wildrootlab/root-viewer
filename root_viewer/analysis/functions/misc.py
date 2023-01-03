@@ -1,19 +1,20 @@
-from napari import layers, Viewer
-from napari.types import ImageData, LabelsData, SurfaceData
 import numpy as np
+from napari import Viewer, layers
+from napari.types import ImageData, LabelsData, SurfaceData
 from scipy import ndimage as ndi
-from skimage.filters import gaussian, sobel
 from skimage.feature import peak_local_max
-from skimage.morphology import binary_opening
+from skimage.filters import gaussian, sobel
 from skimage.measure import label, marching_cubes
+from skimage.morphology import binary_opening
 from skimage.segmentation import watershed
 
-def split_touching_objects(binary:LabelsData, sigma: float = 3.5) -> LabelsData:
+
+def split_touching_objects(binary: LabelsData, sigma: float = 3.5) -> LabelsData:
     """
     Takes a binary image and splits the objects similar to the ImageJ watershed algorithm. This splits connected objects when not to dense.
-    
+
     .. warning:: If the nuclei are too dense, consider using stardist or cellpose.
-    
+
     Parameters
     ----------
     binary : LabelsData
@@ -24,7 +25,7 @@ def split_touching_objects(binary:LabelsData, sigma: float = 3.5) -> LabelsData:
     -------
     LabelsData
         The split objects
-    
+
     References
     ----------
     .. [1] https://imagej.nih.gov/ij/docs/menus/process.html#watershed
@@ -32,23 +33,17 @@ def split_touching_objects(binary:LabelsData, sigma: float = 3.5) -> LabelsData:
     .. [3] https://www.napari-hub.org/plugins/cellpose-napari
     .. [4] https://scikit-image.org/docs/dev/auto_examples/segmentation/plot_watershed.html
     """
+
     def _sobel_3d(image):
-        kernel = np.asarray([
+        kernel = np.asarray(
             [
-                [0, 0, 0],
-                [0, 1, 0],
-                [0, 0, 0]
-            ], [
-                [0, 1, 0],
-                [1, -6, 1],
-                [0, 1, 0]
-            ], [
-                [0, 0, 0],
-                [0, 1, 0],
-                [0, 0, 0]
+                [[0, 0, 0], [0, 1, 0], [0, 0, 0]],
+                [[0, 1, 0], [1, -6, 1], [0, 1, 0]],
+                [[0, 0, 0], [0, 1, 0], [0, 0, 0]],
             ]
-        ])
+        )
         return ndi.convolve(image, kernel)
+
     binary = np.asarray(binary)
 
     # typical way of using scikit-image watershed
@@ -65,21 +60,24 @@ def split_touching_objects(binary:LabelsData, sigma: float = 3.5) -> LabelsData:
     if len(binary.shape) == 2:
         edges = sobel(labels)
         edges2 = sobel(binary)
-    else: # assuming 3D
+    else:  # assuming 3D
         edges = _sobel_3d(labels)
         edges2 = _sobel_3d(binary)
 
     almost = np.logical_not(np.logical_xor(edges != 0, edges2 != 0)) * binary
     return binary_opening(almost)
 
-def manually_merge_labels(labels_layer: layers.Labels, points_layer: layers.Points, viewer : Viewer):
+
+def manually_merge_labels(
+    labels_layer: layers.Labels, points_layer: layers.Points, viewer: Viewer
+):
     """
     Merge labels in a labels layer by clicking on them with a points layer.
-    
+
     """
     if points_layer is None:
         points_layer = viewer.add_points([])
-        points_layer.mode = 'ADD'
+        points_layer.mode = "ADD"
         return
     labels = np.asarray(labels_layer.data)
     points = points_layer.data
@@ -95,23 +93,26 @@ def manually_merge_labels(labels_layer: layers.Labels, points_layer: layers.Poin
     labels_layer.data = labels
     points_layer.data = []
 
-def manually_split_labels(labels_layer: layers.Labels, points_layer: layers.Points, viewer: Viewer):
+
+def manually_split_labels(
+    labels_layer: layers.Labels, points_layer: layers.Points, viewer: Viewer
+):
     """
     Split a label at the position of a point. The point is removed after splitting.
-    
+
     Parameters
     ----------
     labels_layer: napari.layers.Labels
         The labels layer to split
     points_layer: napari.layers.Points
         The points layer to use as split positions
-    
+
     Returns
     -------
     The new labels layer"""
     if points_layer is None:
         points_layer = viewer.add_points([])
-        points_layer.mode = 'ADD'
+        points_layer.mode = "ADD"
         return
 
     labels = np.asarray(labels_layer.data)
@@ -128,13 +129,13 @@ def manually_split_labels(labels_layer: layers.Labels, points_layer: layers.Poin
     # origin: https://scikit-image.org/docs/dev/auto_examples/segmentation/plot_watershed.html
     from scipy import ndimage as ndi
     from skimage.segmentation import watershed
-    #from skimage.feature import peak_local_max
 
-    #distance = ndi.distance_transform_edt(binary)
-    #coords = peak_local_max(distance, footprint=np.ones((3, 3)), labels=binary)
+    # from skimage.feature import peak_local_max
+    # distance = ndi.distance_transform_edt(binary)
+    # coords = peak_local_max(distance, footprint=np.ones((3, 3)), labels=binary)
     mask = np.zeros(labels.shape, dtype=bool)
     for i in points:
-        #mask[tuple(points)] = True
+        # mask[tuple(points)] = True
         mask[tuple([int(j) for j in i])] = True
 
     markers, _ = ndi.label(mask)
@@ -144,13 +145,15 @@ def manually_split_labels(labels_layer: layers.Labels, points_layer: layers.Poin
     labels_layer.data = labels
     points_layer.data = []
 
-def extract_slice(image:ImageData, slice_index:int = 0, axis:int = 0) -> ImageData:
+
+def extract_slice(image: ImageData, slice_index: int = 0, axis: int = 0) -> ImageData:
     """Extract (take) a slice from a stack."""
     return np.take(image, slice_index, axis=axis)
 
+
 def wireframe(labels_layer: layers.Labels, viewer: Viewer) -> SurfaceData:
     """
-    Use marching cubes to create a wireframe surface from a label image. This is useful to visualize the overlab between labels. 
+    Use marching cubes to create a wireframe surface from a label image. This is useful to visualize the overlab between labels.
     NOTE: This will nativly turn off the normals for faces and vertices.
 
     Parameters
@@ -165,9 +168,9 @@ def wireframe(labels_layer: layers.Labels, viewer: Viewer) -> SurfaceData:
         The faces of the surface
     """
     labels = np.asarray(labels_layer.data)
-    
+
     verts, faces, _, values = marching_cubes(labels)
-    
+
     wireframe_layer = viewer.add_surface((verts, faces, np.linspace(0, 1, len(verts))))
     wireframe_layer.normals.face.visible = False
     wireframe_layer.normals.vertex.visible = False

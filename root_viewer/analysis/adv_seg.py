@@ -1,5 +1,6 @@
 import functools
 import numbers
+import os
 import sys
 import time
 import warnings
@@ -10,14 +11,8 @@ from typing import Any, Iterable, List, Sequence, Type, Union
 
 import napari
 import numpy as np
-from csbdeep.utils import (
-    _raise,
-    axes_check_and_normalize,
-    axes_dict,
-    load_json,
-    move_image_axes,
-    normalize,
-)
+from csbdeep.utils import (_raise, axes_check_and_normalize, axes_dict,
+                           load_json, move_image_axes, normalize)
 from magicgui import magicgui, register_type
 from napari.qt.threading import thread_worker
 from napari.types import LayerDataTuple
@@ -26,11 +21,10 @@ from napari.utils.colormaps import label_colormap
 from packaging import version
 from psygnal import Signal
 from qtpy.QtWidgets import QSizePolicy
-import sys, os
 
-DEBUG = os.getenv('DEBUG')
-NOPERSIST = os.getenv('NOPERSIST') 
-NOTHREADS = os.getenv('NOTHREADS')
+DEBUG = os.getenv("DEBUG")
+NOPERSIST = os.getenv("NOPERSIST")
+NOTHREADS = os.getenv("NOTHREADS")
 
 _Future = Future
 if sys.version_info < (3, 9):
@@ -94,7 +88,9 @@ def change_handler(*widgets, init=True, debug=DEBUG):
             source = Signal.sender()
             emitter = Signal.current_emitter()
             if debug:
-                print(f"STARDIST-EVENT '{str(emitter.name)}': {source.name:>20} = {args!r}")
+                print(
+                    f"STARDIST-EVENT '{str(emitter.name)}': {source.name:>20} = {args!r}"
+                )
             return handler(*args)
 
         for widget in widgets:
@@ -229,7 +225,8 @@ def _plugin_wrapper():
     # TODO: rethink wrapper, since not really necessary anymore with npe2,
     #       but still want to avoid importing tensorflow if not needed
     #       (e.g. just to open sample data)
-    from csbdeep.models.pretrained import get_model_folder, get_registered_models
+    from csbdeep.models.pretrained import (get_model_folder,
+                                           get_registered_models)
     from stardist.matching import group_matching_labels
     from stardist.models import StarDist2D, StarDist3D
 
@@ -702,13 +699,11 @@ def _plugin_wrapper():
         return r
 
     # -------------------------------------------------------------------------
-    #import os
-    #logo = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'icons', 'logo_dark_resized.png'))
+    # import os
+    # logo = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'icons', 'logo_dark_resized.png'))
 
     @magicgui(
-        label_head=dict(
-            widget_type="Label", label=f'<h1>Advanced Segmentation</h1>'
-        ),
+        label_head=dict(widget_type="Label", label=f"<h1>Advanced Segmentation</h1>"),
         image=dict(label="Input Image"),
         axes=dict(widget_type="LineEdit", label="Image Axes"),
         fov_image=dict(
@@ -716,7 +711,9 @@ def _plugin_wrapper():
             text="Predict on field of view (only for 2D models in 2D view)",
             value=DEFAULTS_WIDGET["fov_image"],
         ),
-        label_nn=dict(widget_type="Label", label="<br><b>Neural Network Prediction:</b>"),
+        label_nn=dict(
+            widget_type="Label", label="<br><b>Neural Network Prediction:</b>"
+        ),
         model_type=dict(
             widget_type="RadioButtons",
             label="Model Type",
@@ -875,7 +872,9 @@ def _plugin_wrapper():
             if viewer is None:
                 raise RuntimeError("viewer is None")
             if image.rgb and axes[-1] != "C":
-                raise RuntimeError("rgb image must have channels as last axis/dimension")
+                raise RuntimeError(
+                    "rgb image must have channels as last axis/dimension"
+                )
 
             def get_slice_not_displayed(vdim, idim):
                 # vdim: dimension index wrt. viewer
@@ -912,19 +911,12 @@ def _plugin_wrapper():
                     zip(corner_pixels[0], corner_pixels[1]),
                 )
             )
-            # if DEBUG:
-            #     print(f"{corner_pixels = }")
-            #     print(f"{viewer_dim_to_image_dim = }")
-            #     print(f"{viewer_dim_to_corner = }")
-            #     print(f"{viewer.dims.displayed = }")
 
             sl = [None] * x.ndim
             for vdim in range(viewer.dims.ndim):
                 idim = viewer_dim_to_image_dim.get(vdim)
                 c = viewer_dim_to_corner.get(vdim)
-                # DEBUG and print(
-                #     f"{vdim=}, {idim=}{f'/{axes[idim]}' if idim is not None else ''}, {c=}"
-                # )
+
                 if c is not None:
                     if vdim in viewer.dims.displayed:
                         fr, to = c
@@ -957,7 +949,9 @@ def _plugin_wrapper():
 
         # region: progress bars
         uses_tiling = n_tiles is not None and np.prod(n_tiles) > 1
-        pbar_time = progress(total=0, desc="StarDist Time-lapse") if "T" in axes else None
+        pbar_time = (
+            progress(total=0, desc="StarDist Time-lapse") if "T" in axes else None
+        )
 
         def make_pbar(desc="StarDist Prediction"):
             return progress(
@@ -1080,7 +1074,9 @@ def _plugin_wrapper():
     plugin.axes.value = ""
     plugin.n_tiles.value = DEFAULTS["n_tiles"]
     plugin.input_scale.value = DEFAULTS["input_scale"]
-    plugin.label_head.value = '<small>Star-convex object detection for 2D and 3D images.</small>'
+    plugin.label_head.value = (
+        "<small>Star-convex object detection for 2D and 3D images.</small>"
+    )
 
     # make labels prettier (https://doc.qt.io/qt-5/qsizepolicy.html#Policy-enum)
     for w in (plugin.label_head, plugin.label_nn, plugin.label_nms, plugin.label_adv):
@@ -1203,7 +1199,9 @@ def _plugin_wrapper():
                 axes, image, err = getattr(self.args, "image_axes", (None, None, None))
                 widgets_valid(
                     plugin.axes,
-                    valid=(valid or (image is None and (axes is None or len(axes) == 0))),
+                    valid=(
+                        valid or (image is None and (axes is None or len(axes) == 0))
+                    ),
                 )
                 if (
                     SLOW_SHAPE_LAYER
@@ -1257,7 +1255,10 @@ def _plugin_wrapper():
                         "no tiling"
                         if n_tiles is None
                         else "\n".join(
-                            [f"{t}: {s}" for t, s in zip(n_tiles, get_data(image).shape)]
+                            [
+                                f"{t}: {s}"
+                                for t, s in zip(n_tiles, get_data(image).shape)
+                            ]
                         )
                     )
                     return n_tiles
@@ -1279,7 +1280,9 @@ def _plugin_wrapper():
                     if input_scale is None:
                         plugin.input_scale.tooltip = "no scaling"
                     elif isinstance(input_scale, numbers.Number):
-                        plugin.input_scale.tooltip = f"{input_scale} for all spatial axes"
+                        plugin.input_scale.tooltip = (
+                            f"{input_scale} for all spatial axes"
+                        )
                     else:
                         assert len(input_scale) == len(get_data(image).shape)
                         plugin.input_scale.tooltip = "\n".join(
@@ -1435,11 +1438,15 @@ def _plugin_wrapper():
     # ensure that percentile low < percentile high
     @change_handler(plugin.perc_low)
     def _perc_low_change(_value):
-        plugin.perc_high.value = max(plugin.perc_low.value + 0.01, plugin.perc_high.value)
+        plugin.perc_high.value = max(
+            plugin.perc_low.value + 0.01, plugin.perc_high.value
+        )
 
     @change_handler(plugin.perc_high)
     def _perc_high_change(_value):
-        plugin.perc_low.value = min(plugin.perc_low.value, plugin.perc_high.value - 0.01)
+        plugin.perc_low.value = min(
+            plugin.perc_low.value, plugin.perc_high.value - 0.01
+        )
 
     @change_handler(plugin.norm_axes)
     def _norm_axes_change(value: str):
@@ -1462,7 +1469,9 @@ def _plugin_wrapper():
     @change_handler(plugin.model_type, init=False)
     def _model_type_change(model_type: Union[str, type]):
         selected = widget_for_modeltype[model_type]
-        for w in set((plugin.model2d, plugin.model3d, plugin.model_folder)) - {selected}:
+        for w in set((plugin.model2d, plugin.model3d, plugin.model_folder)) - {
+            selected
+        }:
             w.hide()
         selected.show()
         # trigger _model_change
@@ -1700,6 +1709,8 @@ def _plugin_wrapper():
     return plugin, plugin_function
 
     # endregion
+
+
 # endregion
 
 

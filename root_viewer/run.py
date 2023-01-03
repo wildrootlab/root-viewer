@@ -1,7 +1,10 @@
-from PyQt5.QtWidgets import QApplication
-import qdarktheme
 import sys
-import gui.main_window, gui.splash
+
+import qdarktheme
+from PyQt5.QtWidgets import QApplication
+
+import gui.main_window
+import gui.splash
 
 if __name__ == "__main__":
     qapp = QApplication.instance()

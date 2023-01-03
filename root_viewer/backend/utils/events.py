@@ -53,23 +53,12 @@ import warnings
 import weakref
 from collections.abc import Sequence
 from functools import partial
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generator,
-    List,
-    Literal,
-    Optional,
-    Tuple,
-    Type,
-    Union,
-    cast,
-)
+from typing import (Any, Callable, Dict, Generator, List, Literal, Optional,
+                    Tuple, Type, Union, cast)
 
-from vispy.util.logs import _handle_exception
 # for backwards compatibility, use napari translation function for ALL translatable strings
 from napari.utils.translations import trans
+from vispy.util.logs import _handle_exception
 
 
 class Event:
@@ -176,7 +165,7 @@ class Event:
                 return "<...>"
             attrs = []
             for name in dir(self):
-                if name.startswith('_'):
+                if name.startswith("_"):
                     continue
                 # select only properties
                 if not hasattr(type(self), name) or not isinstance(
@@ -203,9 +192,9 @@ _event_repr_depth = 0
 
 
 Callback = Union[Callable[[Event], None], Callable[[], None]]
-CallbackRef = Tuple['weakref.ReferenceType[Any]', str]  # dereferenced method
+CallbackRef = Tuple["weakref.ReferenceType[Any]", str]  # dereferenced method
 CallbackStr = Tuple[
-    Union['weakref.ReferenceType[Any]', object], str
+    Union["weakref.ReferenceType[Any]", object], str
 ]  # dereferenced method
 
 
@@ -292,13 +281,13 @@ class EventEmitter:
         self.source = source
         self.default_args = {}
         if type is not None:
-            self.default_args['type'] = type
+            self.default_args["type"] = type
 
         assert inspect.isclass(event_class)
         self.event_class = event_class
 
         self._ignore_callback_errors: bool = False  # True
-        self.print_callback_errors = 'reminders'  # 'reminders'
+        self.print_callback_errors = "reminders"  # 'reminders'
 
     @property
     def ignore_callback_errors(self) -> bool:
@@ -331,13 +320,13 @@ class EventEmitter:
     def print_callback_errors(
         self,
         val: Union[
-            Literal['first'],
-            Literal['reminders'],
-            Literal['always'],
-            Literal['never'],
+            Literal["first"],
+            Literal["reminders"],
+            Literal["always"],
+            Literal["never"],
         ],
     ):
-        if val not in ('first', 'reminders', 'always', 'never'):
+        if val not in ("first", "reminders", "always", "never"):
             raise ValueError(
                 trans._(
                     'print_callback_errors must be "first", "reminders", "always", or "never"',
@@ -367,9 +356,7 @@ class EventEmitter:
     def source(self, s):
         self._source = None if s is None else weakref.ref(s)
 
-    def _is_core_callback(
-        self, callback: Union[CallbackRef, Callback], core: str
-    ):
+    def _is_core_callback(self, callback: Union[CallbackRef, Callback], core: str):
         """
         Check if the callback is a core callback
 
@@ -386,23 +373,23 @@ class EventEmitter:
             if isinstance(callback, partial):
                 callback = callback.func
             if not isinstance(callback, tuple):
-                return callback.__module__.startswith(core + '.')
+                return callback.__module__.startswith(core + ".")
             obj = callback[0]()  # get object behind weakref
             if obj is None:  # object is dead
                 return False
-            return obj.__module__.startswith(core + '.')
+            return obj.__module__.startswith(core + ".")
 
         except AttributeError:
             return False
 
     def connect(
         self,
-        callback: Union[Callback, CallbackRef, CallbackStr, 'EventEmitter'],
+        callback: Union[Callback, CallbackRef, CallbackStr, "EventEmitter"],
         ref: Union[bool, str] = False,
-        position: Union[Literal['first'], Literal['last']] = 'first',
+        position: Union[Literal["first"], Literal["last"]] = "first",
         before: Union[str, Callback, List[Union[str, Callback]], None] = None,
         after: Union[str, Callback, List[Union[str, Callback]], None] = None,
-        until: Optional['EventEmitter'] = None,
+        until: Optional["EventEmitter"] = None,
     ):
         """Connect this emitter to a new callback.
 
@@ -470,7 +457,7 @@ class EventEmitter:
             if ref:
                 if isinstance(callback, tuple):
                     _ref = callback[1]
-                elif hasattr(callback, '__name__'):  # function
+                elif hasattr(callback, "__name__"):  # function
                     _ref = callback.__name__
                 else:  # Method, or other
                     _ref = callback.__class__.__name__
@@ -481,7 +468,7 @@ class EventEmitter:
         else:
             raise TypeError(
                 trans._(
-                    'ref must be a bool or string',
+                    "ref must be a bool or string",
                     deferred=True,
                 )
             )
@@ -491,7 +478,7 @@ class EventEmitter:
             )
 
         # positions
-        if position not in ('first', 'last'):
+        if position not in ("first", "last"):
             raise ValueError(
                 trans._(
                     'position must be "first" or "last", not {position}',
@@ -502,12 +489,12 @@ class EventEmitter:
         core_callbacks_indexes = [
             i
             for i, c in enumerate(self._callbacks)
-            if self._is_core_callback(c, 'Root-Viewer')
+            if self._is_core_callback(c, "Root-Viewer")
         ]
         core_callbacks_count = (
             max(core_callbacks_indexes) + 1 if core_callbacks_indexes else 0
         )
-        if self._is_core_callback(callback, 'Root-Viewer'):
+        if self._is_core_callback(callback, "Root-Viewer"):
             callback_bounds = (0, core_callbacks_count)
         else:
             callback_bounds = (core_callbacks_count, len(callback_refs))
@@ -516,16 +503,13 @@ class EventEmitter:
         bounds: List[int] = []
         for ri, criteria in enumerate((before, after)):
             if criteria is None or criteria == []:
-                bounds.append(
-                    callback_bounds[1] if ri == 0 else callback_bounds[0]
-                )
+                bounds.append(callback_bounds[1] if ri == 0 else callback_bounds[0])
             else:
                 if not isinstance(criteria, list):
                     criteria = [criteria]
                 for c in criteria:
                     count = sum(
-                        c in [cn, cc]
-                        for cn, cc in zip(callback_refs, callbacks)
+                        c in [cn, cc] for cn, cc in zip(callback_refs, callbacks)
                     )
                     if count != 1:
                         raise ValueError(
@@ -540,9 +524,7 @@ class EventEmitter:
                         )
                 matches = [
                     ci
-                    for ci, (cn, cc) in enumerate(
-                        zip(callback_refs, callbacks)
-                    )
+                    for ci, (cn, cc) in enumerate(zip(callback_refs, callbacks))
                     if (cc in criteria or cn in criteria)
                 ]
                 bounds.append(matches[0] if ri == 0 else (matches[-1] + 1))
@@ -556,7 +538,7 @@ class EventEmitter:
                     callback_refs=callback_refs,
                 )
             )
-        idx = bounds[1] if position == 'first' else bounds[0]  # 'last'
+        idx = bounds[1] if position == "first" else bounds[0]  # 'last'
 
         # actually add the callback
         self._callbacks.insert(idx, callback)
@@ -568,9 +550,7 @@ class EventEmitter:
 
         return old_callback  # allows connect to be used as a decorator
 
-    def disconnect(
-        self, callback: Union[Callback, CallbackRef, None, object] = None
-    ):
+    def disconnect(self, callback: Union[Callback, CallbackRef, None, object] = None):
         """Disconnect a callback from this emitter.
 
         If no callback is specified, then *all* callbacks are removed.
@@ -595,10 +575,7 @@ class EventEmitter:
                     and isinstance(local_callback[0], weakref.ref)
                 ):
                     continue
-                if (
-                    local_callback[0]() is callback
-                    or local_callback[0]() is None
-                ):
+                if local_callback[0]() is callback or local_callback[0]() is None:
                     index_list.append(idx)
             for idx in index_list[::-1]:
                 self._callbacks.pop(idx)
@@ -658,9 +635,7 @@ class EventEmitter:
             )
         )
 
-    def _normalize_cb(
-        self, callback
-    ) -> Tuple[Union[CallbackRef, Callback], bool]:
+    def _normalize_cb(self, callback) -> Tuple[Union[CallbackRef, Callback], bool]:
         # dereference methods into a (self, method_name) pair so that we can
         # make the connection without making a strong reference to the
         # instance.
@@ -668,9 +643,7 @@ class EventEmitter:
         if inspect.ismethod(callback):
             callback = self._get_proper_name(callback)
         # always use a weak ref
-        if isinstance(callback, tuple) and not isinstance(
-            callback[0], weakref.ref
-        ):
+        if isinstance(callback, tuple) and not isinstance(callback[0], weakref.ref):
             callback = (weakref.ref(callback[0]), *callback[1:])
 
         if isinstance(start_callback, Callable):
@@ -723,9 +696,7 @@ class EventEmitter:
             _log_event_stack(event)
 
             rem: List[CallbackRef] = []
-            for cb, pass_event in zip(
-                self._callbacks[:], self._callback_pass_event[:]
-            ):
+            for cb, pass_event in zip(self._callbacks[:], self._callback_pass_event[:]):
                 if isinstance(cb, tuple):
                     obj = cb[0]()
                     if obj is None:
@@ -784,8 +755,8 @@ class EventEmitter:
             # here... but this error is consistent across backends
             if (
                 isinstance(e, RuntimeError)
-                and 'C++' in str(e)
-                and str(e).endswith(('has been deleted', 'already deleted.'))
+                and "C++" in str(e)
+                and str(e).endswith(("has been deleted", "already deleted."))
             ):
                 self.disconnect(cb)
                 return
@@ -976,9 +947,7 @@ class EmitterGroup(EventEmitter):
         """
         return self._emitters[name]
 
-    def __setitem__(
-        self, name: str, emitter: Union[Type[Event], EventEmitter, None]
-    ):
+    def __setitem__(self, name: str, emitter: Union[Type[Event], EventEmitter, None]):
         """
         Alias for EmitterGroup.add(name=emitter)
         """
@@ -1038,7 +1007,7 @@ class EmitterGroup(EventEmitter):
             elif not isinstance(emitter, EventEmitter):
                 raise RuntimeError(
                     trans._(
-                        'Emitter must be specified as either an EventEmitter instance or Event subclass. (got {name}={emitter})',
+                        "Emitter must be specified as either an EventEmitter instance or Event subclass. (got {name}={emitter})",
                         deferred=True,
                         name=name,
                         emitter=emitter,
@@ -1094,9 +1063,9 @@ class EmitterGroup(EventEmitter):
 
     def connect(
         self,
-        callback: Union[Callback, CallbackRef, 'EmitterGroup'],
+        callback: Union[Callback, CallbackRef, "EmitterGroup"],
         ref: Union[bool, str] = False,
-        position: Union[Literal['first'], Literal['last']] = 'first',
+        position: Union[Literal["first"], Literal["last"]] = "first",
         before: Union[str, Callback, List[Union[str, Callback]], None] = None,
         after: Union[str, Callback, List[Union[str, Callback]], None] = None,
     ):
@@ -1107,9 +1076,7 @@ class EmitterGroup(EventEmitter):
         for arguments.
         """
         self._connect_emitters(True)
-        return EventEmitter.connect(
-            self, callback, ref, position, before, after
-        )
+        return EventEmitter.connect(self, callback, ref, position, before, after)
 
     def disconnect(self, callback: Optional[Callback] = None):
         """Disconnect the callback from this group. See
@@ -1149,7 +1116,7 @@ class EmitterGroup(EventEmitter):
             elif isinstance(emitter, EmitterGroup):
                 emitter.ignore_callback_errors_all(ignore)
 
-    def blocker_all(self) -> 'EventBlockerAll':
+    def blocker_all(self) -> "EventBlockerAll":
         """Return an EventBlockerAll to be used in 'with' statements
 
         Notes
@@ -1218,7 +1185,7 @@ def _is_pos_arg(param: inspect.Parameter):
 
 try:
     # this could move somewhere higher up in Root-Viewer imports ... but where?
-    __import__('dotenv').load_dotenv()
+    __import__("dotenv").load_dotenv()
 except ImportError:
     pass
 
