@@ -1,3 +1,5 @@
 from setuptools import find_packages, setup
 
-setup(name="root_viewer", version="0.0.1", packages=find_packages())
+from root_viewer._version import __version__
+
+setup(name="root_viewer", version=__version__, packages=find_packages())

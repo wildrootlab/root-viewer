@@ -4,8 +4,7 @@ from weakref import WeakSet
 
 from napari._qt.containers import QtLayerList
 from napari._qt.layer_controls import QtLayerControlsContainer
-from napari._qt.widgets.qt_viewer_buttons import (QtLayerButtons,
-                                                  QtViewerButtons)
+from napari._qt.widgets.qt_viewer_buttons import QtLayerButtons, QtViewerButtons
 from napari.components import ViewerModel
 from napari.utils.action_manager import action_manager
 from napari.utils.translations import trans
@@ -31,6 +30,7 @@ class Napari(ViewerModel):
         # we delay initialization of plugin system to the first instantiation
         # of a viewer... rather than just on import of plugins module
         from napari.plugins import _initialize_plugins
+
         # having this import here makes all of Qt imported lazily, upon
         # instantiating the first Viewer.
         from napari.window import Window as NapariWindow
@@ -42,7 +42,7 @@ class Napari(ViewerModel):
 
     # Expose private window publically. This is needed to keep window off pydantic model
     @property
-    def window(self) -> "NapariWindow":
+    def window(self) -> "NapariWindow":  # type: ignore
         return self._window
 
     def update_console(self, variables):

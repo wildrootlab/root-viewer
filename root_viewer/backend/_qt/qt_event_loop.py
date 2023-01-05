@@ -93,7 +93,8 @@ def get_app(
     kwargs = locals() if set_values else _defaults
     global _app_ref
 
-    app = QApplication.instance()
+    app = QApplication(sys.argv)
+
     if app:
         set_values.discard("ipy_interactive")
         if set_values:

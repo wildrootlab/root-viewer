@@ -11,8 +11,7 @@ from weakref import WeakValueDictionary
 
 from napari._qt.qt_resources import get_stylesheet
 from napari._qt.utils import QImg2array
-from napari._qt.widgets.qt_viewer_dock_widget import \
-    _SHORTCUT_DEPRECATION_STRING
+from napari._qt.widgets.qt_viewer_dock_widget import _SHORTCUT_DEPRECATION_STRING
 from napari.settings import get_settings
 from napari.utils.io import imsave
 from napari.utils.misc import in_jupyter
@@ -20,16 +19,25 @@ from napari.utils.theme import _themes, get_system_theme
 from napari.utils.translations import trans
 from qtpy.QtCore import QSettings, Qt
 from qtpy.QtGui import QIcon, QImage
-from qtpy.QtWidgets import (QApplication, QDockWidget, QHBoxLayout,
-                            QMainWindow, QMenu, QShortcut, QWidget)
+from qtpy.QtWidgets import (
+    QApplication,
+    QDockWidget,
+    QHBoxLayout,
+    QMainWindow,
+    QMenu,
+    QShortcut,
+    QWidget,
+)
 
 from root_viewer.backend._qt.qt_event_loop import ICON_PATH, _defaults, get_app
 from root_viewer.backend._qt.qt_napari_viewer import Napari, NapariWidgets
 from root_viewer.backend._qt.widgets.dock_widgets import QtViewerDockWidget
+from root_viewer.backend.qt.widget import Widget
+from root_viewer.settings._application import RootViewerSettings
 
 _sentinel = object()
 
-from magicgui.widgets import Widget
+from magicgui.widgets import Widget as MagicWidget
 
 
 class NapariQtApp(Napari):
@@ -42,7 +50,7 @@ class NapariQtApp(Napari):
         self.qt_viewer()
 
     def qt_viewer(self):
-        """This instanciates an of the entire Naprari application"""
+        """This instanciates an instance of the entire Naprari application"""
         return self.window._qt_window
 
     @property
@@ -98,16 +106,14 @@ class _QtMainWindow(QMainWindow):
     _instances: ClassVar[List["_QtMainWindow"]] = []
 
     def __init__(self, window: "Window", parent=None, theme: str = "dark") -> None:
-        super().__init__(parent)
-        # create QApplication if it doesn't already exist
-        get_app()
-
+        super().__init__()
         self.main_widow = window
         self.setStyleSheet(get_stylesheet(theme))
 
-        # temporary method for settings until we have a settings manager
-        self.settings = QSettings("Root Viewer")
-        self.get_settings()
+        # initialize settings
+        self.settings = RootViewerSettings()
+
+        self.load_configs()
 
         self.setWindowTitle("Root Viewer")
         self.setWindowIcon(QIcon(self._window_icon))
@@ -131,18 +137,30 @@ class _QtMainWindow(QMainWindow):
 
         _QtMainWindow._instances.append(self)
 
-    def get_settings(self):
+    def load_configs(self):
         """Load Settings"""
+        self.settings.read_config()
         try:
-            self.resize(self.settings.value("window_size"))
-            self.move(self.settings.value("window_pos"))
+            self.resize(
+                self.settings.config.window_size[0], self.settings.config.window_size[1]
+            )
+            self.move(
+                self.settings.config.window_position[0],
+                self.settings.config.window_position[1],
+            )
         except:
             pass
 
     def set_settings(self):
         try:
-            self.settings.setValue("window_size", self.size())
-            self.settings.setValue("window_pos", self.pos())
+            self.settings.set_value(
+                {"window_size": [self.size().width(), self.size().height()]},
+                config=True,
+            )
+            self.settings.set_value(
+                {"window_position": [self.pos().x(), self.pos().y()]}, config=True
+            )
+            self.settings.save_config()
         except:
             pass
 
@@ -152,6 +170,14 @@ class _QtMainWindow(QMainWindow):
         self.napari.close_all()
         _QtMainWindow._instances.remove(self)
         super().closeEvent(event)
+
+    def show(self):
+        """Show the window."""
+        super().show()
+        self.viewer_widget.setFocus()
+        self.viewer_widget.raise_()
+        self.raise_()
+        self.activateWindow()
 
 
 class Window:
@@ -177,8 +203,8 @@ class Window:
     """
 
     def __init__(self, *, show: bool = True) -> None:
-        # create an instance of the napari viewer
-        # self.viewer = Viewer(show=False)
+        # create QApplication if it doesn't already exist
+        get_app()
 
         # Dictionary holding dock widgets
         self._dock_widgets: Dict[str, QtViewerDockWidget] = WeakValueDictionary()
@@ -191,10 +217,6 @@ class Window:
 
         self.napari_widgets = NapariWidgets(self.main_widow.napari)
         self._add_menus()
-
-        # self._update_theme()
-
-        # get_settings().appearance.events.theme.connect(self._update_theme)
 
         self._add_viewer_dock_widget(
             self.napari_widgets.dockConsole,
@@ -359,7 +381,7 @@ class Window:
 
     def add_dock_widget(
         self,
-        widget: Union[QWidget, "Widget"],
+        widget: Union[QWidget, Widget, "MagicWidget"],
         *,
         name: str = "",
         area: str = "right",

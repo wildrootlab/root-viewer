@@ -53,8 +53,19 @@ import warnings
 import weakref
 from collections.abc import Sequence
 from functools import partial
-from typing import (Any, Callable, Dict, Generator, List, Literal, Optional,
-                    Tuple, Type, Union, cast)
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generator,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+    cast,
+)
 
 # for backwards compatibility, use napari translation function for ALL translatable strings
 from napari.utils.translations import trans

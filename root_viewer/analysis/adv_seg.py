@@ -11,8 +11,14 @@ from typing import Any, Iterable, List, Sequence, Type, Union
 
 import napari
 import numpy as np
-from csbdeep.utils import (_raise, axes_check_and_normalize, axes_dict,
-                           load_json, move_image_axes, normalize)
+from csbdeep.utils import (
+    _raise,
+    axes_check_and_normalize,
+    axes_dict,
+    load_json,
+    move_image_axes,
+    normalize,
+)
 from magicgui import magicgui, register_type
 from napari.qt.threading import thread_worker
 from napari.types import LayerDataTuple
@@ -225,8 +231,7 @@ def _plugin_wrapper():
     # TODO: rethink wrapper, since not really necessary anymore with npe2,
     #       but still want to avoid importing tensorflow if not needed
     #       (e.g. just to open sample data)
-    from csbdeep.models.pretrained import (get_model_folder,
-                                           get_registered_models)
+    from csbdeep.models.pretrained import get_model_folder, get_registered_models
     from stardist.matching import group_matching_labels
     from stardist.models import StarDist2D, StarDist3D
 

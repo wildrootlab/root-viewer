@@ -9,8 +9,16 @@ from weakref import ReferenceType, ref
 from napari._qt.utils import combine_widgets, qt_signals_blocked
 from napari.utils.translations import trans
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import (QDockWidget, QFrame, QHBoxLayout, QLabel,
-                            QPushButton, QSizePolicy, QVBoxLayout, QWidget)
+from qtpy.QtWidgets import (
+    QDockWidget,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QSizePolicy,
+    QVBoxLayout,
+    QWidget,
+)
 
 if TYPE_CHECKING:
     from magicgui.widgets import Widget
@@ -70,7 +78,7 @@ class QtViewerDockWidget(QDockWidget):
         shortcut=_sentinel,
         object_name: str = "",
         add_vertical_stretch=True,
-        add_custom_title_bar=True,
+        add_custom_title_bar=False,
         close_btn=True,
         hide_btn=True,
         float_btn=True,
