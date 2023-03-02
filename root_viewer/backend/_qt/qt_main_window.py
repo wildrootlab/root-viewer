@@ -234,17 +234,17 @@ class Window:
             # add_custom_title_bar=False,
         )
 
-        if show:
-            self.show(block=False)
-            # Ensure the controls dock uses the minimum height
-            self.main_widow.resizeDocks(
-                [
-                    self.viewer_widget.dockLayerControls,
-                    self.viewer_widget.dockLayerList,
-                ],
-                [self.viewer_widget.dockLayerControls.minimumHeight(), 10000],
-                Qt.Orientation.Vertical,
-            )
+        # if show:
+        #     self.show(block=False)
+        #     # Ensure the controls dock uses the minimum height
+        #     self.main_widow.resizeDocks(
+        #         [
+        #             self.viewer_widget.dockLayerControls,
+        #             self.viewer_widget.dockLayerList,
+        #         ],
+        #         [self.viewer_widget.dockLayerControls.minimumHeight(), 10000],
+        #         Qt.Orientation.Vertical,
+        #     )
 
     def _setup_existing_themes(self, connect: bool = True):
         """This function is only executed once at the startup of napari
