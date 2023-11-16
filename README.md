@@ -7,7 +7,7 @@
 > **Note** <br>
 > This program is still in development
 
-ML image analysis tools built using PyQt as a wrapper and the [Napari Viewer](https://github.com/napari/napari)
+A set of ML image analysis tools built using PyQt as a wrapper around the excellent [Napari Viewer](https://github.com/napari/napari)
 
 ![Image](https://github.com/wildrootlab/root-viewer/blob/main/docs/images/main.gif)
 
